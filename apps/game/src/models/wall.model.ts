@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { doorSchema } from './door.model';
 import { windowSchema } from './window.model';
 
 export const wallSide = z.enum(['north', 'south', 'east', 'west']);
@@ -15,6 +16,7 @@ export const wallSchema = z.object({
   end: position2d,
   thickness: z.number().default(0.1),
   windows: z.array(windowSchema).optional(),
+  doors: z.array(doorSchema).optional(),
 });
 
 export type WallSide = z.infer<typeof wallSide>;
