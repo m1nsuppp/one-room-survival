@@ -36,10 +36,13 @@ function createRectangularWalls(width: number, depth: number): Wall[] {
   ];
 }
 
+/** 한국 주거용 건축물 표준 천장 높이 (m) */
+const STANDARD_CEILING_HEIGHT_M = 2.4;
+
 /** 5평 원룸 (4m x 4m = 16㎡) */
 export const sampleRoom: Room = {
   width: 4,
   depth: 4,
-  height: 2.4,
+  height: STANDARD_CEILING_HEIGHT_M,
   walls: createRectangularWalls(4, 4),
 };
