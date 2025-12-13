@@ -14,7 +14,7 @@ export const wallSchema = z.object({
   start: position2d,
   end: position2d,
   thickness: z.number().default(0.1),
-  windows: z.array(windowSchema).default([]),
+  windows: z.array(windowSchema).optional(),
 });
 
 export type WallSide = z.infer<typeof wallSide>;
