@@ -1,3 +1,4 @@
+import type { Door } from '@/models/door.model';
 import type { Room } from '@/models/room.model';
 import type { Wall } from '@/models/wall.model';
 import type { Window } from '@/models/window.model';
@@ -6,6 +7,9 @@ const WALL_THICKNESS = 0.1;
 
 /** 표준 창문 하단 높이 (m) */
 const STANDARD_SILL_HEIGHT_M = 0.9;
+
+/** 표준 실내문 너비 (m) */
+const STANDARD_DOOR_WIDTH_M = 0.9;
 
 function createRectangularWalls(width: number, depth: number): Wall[] {
   const southWindow: Window = {
@@ -16,6 +20,13 @@ function createRectangularWalls(width: number, depth: number): Wall[] {
     sillHeight: STANDARD_SILL_HEIGHT_M,
   };
 
+  const northDoor: Door = {
+    id: 'north-door-1',
+    position: 0.5,
+    width: STANDARD_DOOR_WIDTH_M,
+    height: 2.1,
+  };
+
   return [
     {
       id: 'north',
@@ -23,6 +34,7 @@ function createRectangularWalls(width: number, depth: number): Wall[] {
       start: { x: 0, z: 0 },
       end: { x: width, z: 0 },
       thickness: WALL_THICKNESS,
+      doors: [northDoor],
     },
     {
       id: 'south',
