@@ -12,10 +12,7 @@ export function Room({ room }: RoomProps): JSX.Element {
 
   return (
     <group>
-      <Floor
-        width={width}
-        depth={depth}
-      />
+      <Floor floor={{ width, depth }} />
       {walls.map((wall) => (
         <Wall
           key={wall.id}

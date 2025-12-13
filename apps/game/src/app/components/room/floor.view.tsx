@@ -1,11 +1,13 @@
 import type { JSX } from 'react';
+import type { Floor as FloorModel } from '@/models/floor.model';
 
 interface FloorProps {
-  width: number;
-  depth: number;
+  floor: FloorModel;
 }
 
-export function Floor({ width, depth }: FloorProps): JSX.Element {
+export function Floor({ floor }: FloorProps): JSX.Element {
+  const { width, depth } = floor;
+
   return (
     <mesh
       rotation={[-Math.PI / 2, 0, 0]}
