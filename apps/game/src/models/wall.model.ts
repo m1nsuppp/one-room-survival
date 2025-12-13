@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { windowSchema } from './window.model';
 
 export const wallSide = z.enum(['north', 'south', 'east', 'west']);
 
@@ -13,6 +14,7 @@ export const wallSchema = z.object({
   start: position2d,
   end: position2d,
   thickness: z.number().default(0.1),
+  windows: z.array(windowSchema).default([]),
 });
 
 export type WallSide = z.infer<typeof wallSide>;
