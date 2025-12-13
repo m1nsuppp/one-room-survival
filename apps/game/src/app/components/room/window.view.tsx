@@ -47,7 +47,11 @@ export function Window({
       {/* 유리 */}
       <mesh>
         <planeGeometry args={[width - frameThickness * 2, height - frameThickness * 2]} />
-        <meshStandardMaterial color="#87CEEB" transparent opacity={0.3} />
+        <meshStandardMaterial
+          color="#87CEEB"
+          transparent
+          opacity={0.3}
+        />
       </mesh>
     </group>
   );

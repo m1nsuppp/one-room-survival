@@ -120,10 +120,7 @@ export function Wall({ wall, height }: WallProps): JSX.Element {
   const centerX = (start.x + end.x) / 2;
   const centerZ = (start.z + end.z) / 2;
 
-  const openings: Opening[] = [
-    ...windows.map(toOpening),
-    ...doors.map(doorToOpening),
-  ];
+  const openings: Opening[] = [...windows.map(toOpening), ...doors.map(doorToOpening)];
   const segments = calculateWallSegments(length, height, openings);
 
   return (

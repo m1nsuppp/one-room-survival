@@ -8,11 +8,7 @@ interface DoorProps {
 }
 
 /** 문 프레임과 문짝을 렌더링 */
-export function Door({
-  door,
-  wallLength,
-  wallThickness,
-}: DoorProps): JSX.Element {
+export function Door({ door, wallLength, wallThickness }: DoorProps): JSX.Element {
   const { position, width, height } = door;
 
   // 문 중심 위치 (벽 중심 기준 로컬 좌표)
@@ -50,7 +46,11 @@ export function Door({
       {/* 문 손잡이 */}
       <mesh position={[width / 2 - 0.15, 0, wallThickness / 2 + 0.02]}>
         <sphereGeometry args={[0.03, 16, 16]} />
-        <meshStandardMaterial color="#C0C0C0" metalness={0.8} roughness={0.2} />
+        <meshStandardMaterial
+          color="#C0C0C0"
+          metalness={0.8}
+          roughness={0.2}
+        />
       </mesh>
     </group>
   );
