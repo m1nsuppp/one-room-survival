@@ -1,32 +1,49 @@
-import js from "@eslint/js";
-import eslintConfigPrettier from "eslint-config-prettier";
-import turboPlugin from "eslint-plugin-turbo";
-import tseslint from "typescript-eslint";
-import onlyWarn from "eslint-plugin-only-warn";
+import loveConfig from 'eslint-config-love';
+import eslintConfigPrettier from 'eslint-config-prettier';
 
 /**
  * A shared ESLint configuration for the repository.
  *
- * @type {import("eslint").Linter.Config[]}
+ * @type {Array<import("eslint").Linter.Config>}
  * */
 export const config = [
-  js.configs.recommended,
-  eslintConfigPrettier,
-  ...tseslint.configs.recommended,
   {
-    plugins: {
-      turbo: turboPlugin,
-    },
+    ...loveConfig,
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {
-      "turbo/no-undeclared-env-vars": "warn",
+      ...loveConfig.rules,
+      '@typescript-eslint/triple-slash-reference': 'off',
+      '@typescript-eslint/no-magic-numbers': [
+        'warn',
+        {
+          ignore: [0, 1, -1, 7, 12, 24, 30, 60, 100, 255, 1000, 1024, 10000, 1000000],
+        },
+      ],
+      '@typescript-eslint/no-confusing-void-expression': 'off',
+      complexity: ['error', { max: 20 }],
+      'eslint-comments/require-description': ['error', { ignore: [] }],
+      'padding-line-between-statements': [
+        'error',
+        { blankLine: 'always', prev: 'multiline-expression', next: 'return' },
+        { blankLine: 'always', prev: 'multiline-block-like', next: 'return' },
+        { blankLine: 'always', prev: 'block-like', next: 'return' },
+        { blankLine: 'always', prev: 'const', next: 'return' },
+        { blankLine: 'always', prev: 'let', next: 'return' },
+        { blankLine: 'always', prev: 'var', next: 'return' },
+        { blankLine: 'always', prev: 'if', next: 'return' },
+        { blankLine: 'always', prev: 'for', next: 'return' },
+        { blankLine: 'always', prev: 'while', next: 'return' },
+        { blankLine: 'always', prev: 'do', next: 'return' },
+        { blankLine: 'always', prev: 'switch', next: 'return' },
+        { blankLine: 'always', prev: 'try', next: 'return' },
+      ],
+      '@typescript-eslint/prefer-destructuring': 'off',
     },
   },
+  eslintConfigPrettier,
   {
-    plugins: {
-      onlyWarn,
+    rules: {
+      curly: ['error', 'all'],
     },
-  },
-  {
-    ignores: ["dist/**"],
   },
 ];
