@@ -17,11 +17,14 @@ const FURNITURE_COLORS: Record<FurnitureType, string> = {
 export function FurnitureView({ furniture }: FurnitureViewProps): JSX.Element {
   const { width, depth, height, x, z, rotation, type } = furniture;
 
-  const rotationRad = (parseInt(rotation) * Math.PI) / 180;
+  const rotationRad = (parseInt(rotation, 10) * Math.PI) / 180;
   const color = FURNITURE_COLORS[type];
 
   return (
-    <mesh position={[x, height / 2, z]} rotation={[0, rotationRad, 0]}>
+    <mesh
+      position={[x, height / 2, z]}
+      rotation={[0, rotationRad, 0]}
+    >
       <boxGeometry args={[width, height, depth]} />
       <meshStandardMaterial color={color} />
     </mesh>

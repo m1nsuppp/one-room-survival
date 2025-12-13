@@ -15,10 +15,17 @@ export function Room({ room }: RoomProps): JSX.Element {
     <group>
       <Floor floor={{ width, depth }} />
       {walls.map((wall) => (
-        <Wall key={wall.id} wall={wall} height={height} />
+        <Wall
+          key={wall.id}
+          wall={wall}
+          height={height}
+        />
       ))}
       {furnitures.map((furniture) => (
-        <FurnitureView key={furniture.id} furniture={furniture} />
+        <FurnitureView
+          key={furniture.id}
+          furniture={furniture}
+        />
       ))}
     </group>
   );

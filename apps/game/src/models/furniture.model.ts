@@ -1,13 +1,6 @@
 import { z } from 'zod';
 
-export const furnitureType = z.enum([
-  'bed',
-  'desk',
-  'chair',
-  'closet',
-  'refrigerator',
-  'washer',
-]);
+export const furnitureType = z.enum(['bed', 'desk', 'chair', 'closet', 'refrigerator', 'washer']);
 
 export const rotation = z.enum(['0', '90', '180', '270']);
 
