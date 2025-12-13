@@ -1,6 +1,8 @@
 import type { JSX } from 'react';
+import type { Door as DoorModel } from '@/models/door.model';
 import type { Wall as WallModel } from '@/models/wall.model';
 import type { Window as WindowModel } from '@/models/window.model';
+import { Door } from './door.view';
 import { Window } from './window.view';
 
 interface WallProps {
@@ -15,60 +17,86 @@ interface WallSegment {
   yEnd: number;
 }
 
+/** 창문/문을 통합한 opening 타입 */
+interface Opening {
+  position: number;
+  width: number;
+  height: number;
+  sillHeight: number;
+}
+
+function toOpening(win: WindowModel): Opening {
+  return {
+    position: win.position,
+    width: win.width,
+    height: win.height,
+    sillHeight: win.sillHeight,
+  };
+}
+
+function doorToOpening(door: DoorModel): Opening {
+  return {
+    position: door.position,
+    width: door.width,
+    height: door.height,
+    sillHeight: 0,
+  };
+}
+
 function calculateWallSegments(
   wallLength: number,
   wallHeight: number,
-  windows: WindowModel[],
+  openings: Opening[],
 ): WallSegment[] {
-  if (windows.length === 0) {
+  if (openings.length === 0) {
     return [{ xStart: 0, xEnd: wallLength, yStart: 0, yEnd: wallHeight }];
   }
 
   const segments: WallSegment[] = [];
-  const sortedWindows = [...windows].sort((a, b) => a.position - b.position);
+  const sortedOpenings = [...openings].sort((a, b) => a.position - b.position);
 
   let currentX = 0;
 
-  for (const win of sortedWindows) {
-    const winLeft = win.position * wallLength - win.width / 2;
-    const winRight = win.position * wallLength + win.width / 2;
-    const winBottom = win.sillHeight;
-    const winTop = win.sillHeight + win.height;
+  for (const opening of sortedOpenings) {
+    const left = opening.position * wallLength - opening.width / 2;
+    const right = opening.position * wallLength + opening.width / 2;
+    const bottom = opening.sillHeight;
+    const top = opening.sillHeight + opening.height;
 
-    // 창문 왼쪽 벽 (전체 높이)
-    if (winLeft > currentX) {
+    // opening 왼쪽 벽 (전체 높이)
+    if (left > currentX) {
       segments.push({
         xStart: currentX,
-        xEnd: winLeft,
+        xEnd: left,
         yStart: 0,
         yEnd: wallHeight,
       });
     }
 
-    // 창문 아래 벽 (sill)
-    if (winBottom > 0) {
+    // opening 아래 벽 (sill)
+    if (bottom > 0) {
       segments.push({
-        xStart: winLeft,
-        xEnd: winRight,
+        xStart: left,
+        xEnd: right,
         yStart: 0,
-        yEnd: winBottom,
+        yEnd: bottom,
       });
     }
 
-    // 창문 위 벽
-    if (winTop < wallHeight) {
+    // opening 위 벽
+    if (top < wallHeight) {
       segments.push({
-        xStart: winLeft,
-        xEnd: winRight,
-        yStart: winTop,
+        xStart: left,
+        xEnd: right,
+        yStart: top,
         yEnd: wallHeight,
       });
     }
 
-    currentX = winRight;
+    currentX = right;
   }
 
-  // 마지막 창문 오른쪽 벽
+  // 마지막 opening 오른쪽 벽
   if (currentX < wallLength) {
     segments.push({
       xStart: currentX,
@@ -82,7 +110,7 @@ function calculateWallSegments(
 }
 
 export function Wall({ wall, height }: WallProps): JSX.Element {
-  const { start, end, thickness, windows = [] } = wall;
+  const { start, end, thickness, windows = [], doors = [] } = wall;
 
   const dx = end.x - start.x;
   const dz = end.z - start.z;
@@ -92,7 +120,11 @@ export function Wall({ wall, height }: WallProps): JSX.Element {
   const centerX = (start.x + end.x) / 2;
   const centerZ = (start.z + end.z) / 2;
 
-  const segments = calculateWallSegments(length, height, windows);
+  const openings: Opening[] = [
+    ...windows.map(toOpening),
+    ...doors.map(doorToOpening),
+  ];
+  const segments = calculateWallSegments(length, height, openings);
 
   return (
     <group
@@ -122,6 +154,16 @@ export function Wall({ wall, height }: WallProps): JSX.Element {
         <Window
           key={win.id}
           window={win}
+          wallLength={length}
+          wallThickness={thickness}
+        />
+      ))}
+
+      {/* 문들 */}
+      {doors.map((door) => (
+        <Door
+          key={door.id}
+          door={door}
           wallLength={length}
           wallThickness={thickness}
         />
