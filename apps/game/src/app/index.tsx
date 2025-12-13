@@ -1,18 +1,8 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import type { JSX } from 'react';
-
-function Room(): JSX.Element {
-  return (
-    <mesh
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, 0, 0]}
-    >
-      <planeGeometry args={[4, 4]} />
-      <meshStandardMaterial color="#f0f0f0" />
-    </mesh>
-  );
-}
+import { Room } from './components/room';
+import { sampleRoom } from '@/data/sample-room.data';
 
 export default function App(): JSX.Element {
   return (
@@ -25,7 +15,7 @@ export default function App(): JSX.Element {
         position={[10, 10, 5]}
         intensity={1}
       />
-      <Room />
+      <Room room={sampleRoom} />
       <OrbitControls />
       <gridHelper args={[4, 4]} />
     </Canvas>
