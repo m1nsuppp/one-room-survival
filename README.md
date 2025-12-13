@@ -1,135 +1,154 @@
-# Turborepo starter
+# one-room-survival - 5평 원룸 꾸미기 퍼즐 게임
 
-This Turborepo starter is maintained by the Turborepo core team.
+## 개요
 
-## Using this example
+좁디좁은 원룸에 필수 가구를 모두 배치하는 3D 퍼즐 게임.
+제한된 공간 안에서 다양한 조건(동선, 채광, 콘센트 등)을 만족시키며 가구를 배치해야 한다.
 
-Run the following command:
+## 문제
 
-```sh
-npx create-turbo@latest
-```
+- 기존 인테리어 앱은 "꾸미기"에 집중, 게임성이 없음
+- 퍼즐 게임은 많지만 실생활과 연결된 공감대 있는 주제가 드뭄
+- 원룸 배치는 실제로 많은 사람들이 겪는 현실적인 고민
 
-## What's inside?
+## 솔루션
 
-This Turborepo includes the following packages/apps:
+원룸 가구 배치를 퍼즐 게임화.
+제한된 공간과 조건 속에서 최적의 배치를 찾는 재미 + 현실 공감.
 
-### Apps and Packages
+---
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## 핵심 기능
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### 게임플레이
 
-### Utilities
+**스테이지 시스템**
 
-This Turborepo has some additional tools already setup for you:
+- 각 스테이지마다 다른 원룸 구조 (창문 위치, 문 위치, 기둥, 화장실 위치 등)
+- 스테이지별 필수 배치 가구 목록
+- 스테이지별 특수 조건 (예: 홈트 공간 확보, 듀얼모니터 필수 등)
+- 별점 시스템 (1~3성) - 조건 충족도에 따라
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+**가구 배치**
 
-### Build
+- 3D 뷰에서 가구 드래그 앤 드롭
+- 회전 (90도 단위)
+- 그리드 스냅 (10cm 단위)
+- 가구 목록 패널에서 선택
 
-To build all apps and packages, run the following command:
+**검증 시스템**
 
-```
-cd my-turborepo
+- 충돌 감지: 가구끼리 겹치면 안 됨
+- 동선 검증: 주요 경로가 확보되어야 함 (문→침대, 문→화장실 등)
+- 채광 검증: 창문 앞 막힘 정도 계산
+- 콘센트 검증: 전자기기가 콘센트 도달 범위 내에 있어야 함
+- 문/서랍 열림 공간: 열었을 때 다른 가구랑 충돌하면 안 됨
+- 최소 공간 확보: 특정 영역에 빈 공간 필요 (예: 홈트 공간)
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+### 가구 시스템
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+**가구 속성**
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+- 크기 (width, depth, height)
+- 타입 (침대, 책상, 의자, 수납, 가전 등)
+- 전원 필요 여부
+- 문/서랍 열림 방향 및 크기
+- 필수 여유 공간 (의자 뒤 공간, 냉장고 앞 공간 등)
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+**기본 가구 목록**
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+- 침대 (싱글, 수퍼싱글)
+- 책상 (일반, L자)
+- 의자
+- 옷장 (슬라이딩, 여닫이)
+- 수납장
+- 냉장고 (미니, 일반)
+- 세탁기
+- TV/모니터
+- 행거
 
-### Develop
+### 방 시스템
 
-To develop all apps and packages, run the following command:
+**방 속성**
 
-```
-cd my-turborepo
+- 크기 (기본 5평 = 약 16.5㎡)
+- 벽 구조 (ㄱ자, ㅡ자, 기둥 등)
+- 창문 위치, 크기
+- 문 위치, 열림 방향
+- 화장실 문 위치
+- 콘센트 위치 (여러 개)
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+---
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+## 스테이지 예시
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### 튜토리얼
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+- **"첫 자취"**: 침대, 책상, 의자만 넣기. 동선만 확보하면 됨.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+### 초급
 
-### Remote Caching
+- **"기본 생존"**: 침대, 책상, 옷장, 미니냉장고. 창문 50% 이상 확보.
+- **"세탁의 날"**: 세탁기 추가. 세탁기 문 열림 공간 확보 필요.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+### 중급
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+- **"재택근무"**: 듀얼모니터 책상 필수. 의자 회전 공간 확보. 콘센트 2개 이상 연결.
+- **"자취 요리사"**: 냉장고(일반), 전자레인지, 에어프라이어. 주방 동선 확보.
+- **"옷이 많아"**: 옷장 2개 + 행거. 모든 문이 완전히 열려야 함.
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+### 고급
 
-```
-cd my-turborepo
+- **"헬스 갓생러"**: 홈트 공간 2㎡ 확보 필수. 요가매트 펼칠 공간.
+- **"미니멀 라이프"**: 가구 5개 이하로 모든 필수 조건 충족.
+- **"친구 초대"**: 2인 착석 공간 확보. 동선 넓게.
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+### 하드코어
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+- **"4평 지옥"**: 더 작은 방. 모든 가구 필수.
+- **"기둥 원룸"**: 방 중간에 기둥 있음.
+- **"창문 없는 방"**: 채광 조건 대신 조명 배치 필요.
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+---
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## MVP 범위
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+### 포함
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+- 3개 스테이지 (튜토리얼 1 + 초급 2)
+- 기본 가구 6종 (침대, 책상, 의자, 옷장, 미니냉장고, 세탁기)
+- 핵심 검증: 충돌, 동선, 창문 막힘
+- 로컬 저장
 
-## Useful Links
+### 이후 확장
 
-Learn more about the power of Turborepo:
+- 콘센트 검증
+- 문/서랍 열림 검증
+- 별점 시스템
+- 서버 저장
+- 커스텀 스테이지 에디터
+- 공유 기능
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+---
+
+## 성공 지표
+
+- 3개 스테이지 플레이 가능
+- 검증 로직이 정확하게 동작 (잘못된 배치 감지)
+
+---
+
+## 타겟 유저
+
+- 퍼즐 게임 좋아하는 사람
+- 원룸 자취 경험자 (공감 포인트)
+- 인테리어에 관심 있는 사람
+
+---
+
+## 레퍼런스
+
+- Unpacking (감성 배치 게임)
+- 심즈 건축 모드 (자유 배치)
+- Moving Out (이사 게임, 퍼즐 요소)
+- 오늘의집 3D 인테리어 (실용 배치)
