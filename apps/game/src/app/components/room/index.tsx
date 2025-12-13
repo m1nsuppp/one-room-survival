@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import type { Room as RoomModel } from '@/models/room.model';
+import { FurnitureView } from '../furniture/furniture.view';
 import { Floor } from './floor.view';
 import { Wall } from './wall.view';
 
@@ -8,7 +9,7 @@ interface RoomProps {
 }
 
 export function Room({ room }: RoomProps): JSX.Element {
-  const { width, depth, height, walls } = room;
+  const { width, depth, height, walls, furnitures } = room;
 
   return (
     <group>
@@ -18,6 +19,12 @@ export function Room({ room }: RoomProps): JSX.Element {
           key={wall.id}
           wall={wall}
           height={height}
+        />
+      ))}
+      {furnitures.map((furniture) => (
+        <FurnitureView
+          key={furniture.id}
+          furniture={furniture}
         />
       ))}
     </group>
