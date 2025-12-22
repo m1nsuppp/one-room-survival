@@ -13,22 +13,25 @@ const STANDARD_SILL_HEIGHT_M = 0.9;
 const STANDARD_DOOR_WIDTH_M = 0.9;
 
 function createRectangularWalls(width: number, depth: number): Wall[] {
-  const southWindow: Window = {
-    id: 'south-window-1',
-    position: 0.5,
-    width: 1.8,
-    height: 1.2,
-    sillHeight: STANDARD_SILL_HEIGHT_M,
-  };
-
+  // 문: 북쪽 벽 (z=0) - 왼쪽에 배치
   const northDoor: Door = {
     id: 'north-door-1',
-    position: 0.5,
+    position: 0.25,
     width: STANDARD_DOOR_WIDTH_M,
     height: 2.1,
   };
 
+  // 창문: 서쪽 벽 (x=0) - L자 코너 뷰를 위해 인접한 벽에 배치
+  const westWindow: Window = {
+    id: 'west-window-1',
+    position: 0.6,
+    width: 1.5,
+    height: 1.2,
+    sillHeight: STANDARD_SILL_HEIGHT_M,
+  };
+
   return [
+    // 뒷벽 (카메라에서 보이는 벽들)
     {
       id: 'north',
       side: 'north',
@@ -38,25 +41,26 @@ function createRectangularWalls(width: number, depth: number): Wall[] {
       doors: [northDoor],
     },
     {
+      id: 'west',
+      side: 'west',
+      start: { x: 0, z: 0 },
+      end: { x: 0, z: depth },
+      thickness: WALL_THICKNESS,
+      windows: [westWindow],
+    },
+    // 앞벽 (컷어웨이로 제거될 벽들)
+    {
       id: 'south',
       side: 'south',
       start: { x: 0, z: depth },
       end: { x: width, z: depth },
       thickness: WALL_THICKNESS,
-      windows: [southWindow],
     },
     {
       id: 'east',
       side: 'east',
       start: { x: width, z: 0 },
       end: { x: width, z: depth },
-      thickness: WALL_THICKNESS,
-    },
-    {
-      id: 'west',
-      side: 'west',
-      start: { x: 0, z: 0 },
-      end: { x: 0, z: depth },
       thickness: WALL_THICKNESS,
     },
   ];
