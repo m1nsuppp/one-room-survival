@@ -23,6 +23,8 @@ export default [
             'side',
             'metalness',
             'roughness',
+            'emissive',
+            'emissiveIntensity',
           ],
         },
       ],
