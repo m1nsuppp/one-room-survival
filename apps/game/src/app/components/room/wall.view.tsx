@@ -141,7 +141,7 @@ export function Wall({ wall, height }: WallProps): JSX.Element {
             position={[segCenterX, segCenterY, 0]}
           >
             <boxGeometry args={[segWidth, segHeight, thickness]} />
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color="#f5f5f0" />
           </mesh>
         );
       })}
