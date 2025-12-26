@@ -28,18 +28,15 @@ describe('DragEditPolicy', () => {
     furnitures,
   });
 
-  const createMockContext = (): DragEditPolicyContext => {
-    const room = createTestRoom([createTestFurniture('bed-1', 1, 1)]);
+  const defaultRoom = createTestRoom([createTestFurniture('bed-1', 1, 1)]);
 
-    return {
-      getRoom: () => room,
-      updateFurniturePosition: vi.fn(),
-      setDragging: vi.fn(),
-      executeCommand: vi.fn(),
-      setValidationFeedback: vi.fn(),
-      clearValidationFeedback: vi.fn(),
-    };
-  };
+  const createMockContext = (): DragEditPolicyContext => ({
+    updateFurniturePosition: vi.fn(),
+    setDragging: vi.fn(),
+    executeCommand: vi.fn(),
+    setValidationFeedback: vi.fn(),
+    clearValidationFeedback: vi.fn(),
+  });
 
   describe('understands', () => {
     it('should return true for drag-start request', () => {
@@ -47,6 +44,7 @@ describe('DragEditPolicy', () => {
       const policy = new DragEditPolicy(mockContext);
       const request: DragStartRequest = {
         type: 'drag-start',
+        room: defaultRoom,
         furnitureId: 'bed-1',
         pointerX: 0.5,
         pointerY: 0.5,
@@ -73,6 +71,7 @@ describe('DragEditPolicy', () => {
       const policy = new DragEditPolicy(mockContext);
       const request: DragEndRequest = {
         type: 'drag-end',
+        room: defaultRoom,
         furnitureId: 'bed-1',
       };
 
@@ -94,6 +93,7 @@ describe('DragEditPolicy', () => {
       const policy = new DragEditPolicy(mockContext);
       const request: DragStartRequest = {
         type: 'drag-start',
+        room: defaultRoom,
         furnitureId: 'bed-1',
         pointerX: 0.5,
         pointerY: 0.5,
@@ -110,6 +110,7 @@ describe('DragEditPolicy', () => {
       const policy = new DragEditPolicy(mockContext);
       const request: DragStartRequest = {
         type: 'drag-start',
+        room: defaultRoom,
         furnitureId: 'non-existent',
         pointerX: 0.5,
         pointerY: 0.5,
@@ -129,6 +130,7 @@ describe('DragEditPolicy', () => {
 
       const startRequest: DragStartRequest = {
         type: 'drag-start',
+        room: defaultRoom,
         furnitureId: 'bed-1',
         pointerX: 0.5,
         pointerY: 0.5,
@@ -170,6 +172,7 @@ describe('DragEditPolicy', () => {
 
       const startRequest: DragStartRequest = {
         type: 'drag-start',
+        room: defaultRoom,
         furnitureId: 'bed-1',
         pointerX: 0.5,
         pointerY: 0.5,
@@ -178,6 +181,7 @@ describe('DragEditPolicy', () => {
 
       const endRequest: DragEndRequest = {
         type: 'drag-end',
+        room: defaultRoom,
         furnitureId: 'bed-1',
       };
       policy.getCommand(endRequest);
@@ -192,6 +196,7 @@ describe('DragEditPolicy', () => {
 
       const endRequest: DragEndRequest = {
         type: 'drag-end',
+        room: defaultRoom,
         furnitureId: 'bed-1',
       };
       policy.getCommand(endRequest);
@@ -213,6 +218,7 @@ describe('DragEditPolicy', () => {
       const policy = new DragEditPolicy(mockContext);
       const request: DragStartRequest = {
         type: 'drag-start',
+        room: defaultRoom,
         furnitureId: 'bed-1',
         pointerX: 0.5,
         pointerY: 0.5,

@@ -2,6 +2,7 @@
  * @vitest-environment node
  */
 import { describe, it, expect } from 'vitest';
+import type { Room } from '@/models/room.model';
 import {
   isDragStartRequest,
   isDragMoveRequest,
@@ -19,10 +20,19 @@ import {
 } from './request';
 
 describe('Request type guards', () => {
+  const mockRoom: Room = {
+    width: 4,
+    depth: 4,
+    height: 2.4,
+    walls: [],
+    furnitures: [],
+  };
+
   describe('isDragStartRequest', () => {
     it('should return true for drag-start request', () => {
       const request: DragStartRequest = {
         type: 'drag-start',
+        room: mockRoom,
         furnitureId: 'bed-1',
         pointerX: 0.5,
         pointerY: 0.5,
@@ -57,6 +67,7 @@ describe('Request type guards', () => {
     it('should return true for drag-end request', () => {
       const request: DragEndRequest = {
         type: 'drag-end',
+        room: mockRoom,
         furnitureId: 'bed-1',
       };
       expect(isDragEndRequest(request)).toBe(true);

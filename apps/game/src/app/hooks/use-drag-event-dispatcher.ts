@@ -54,6 +54,7 @@ export function useDragEventDispatcher({
 
       const request: DragStartRequest = {
         type: 'drag-start',
+        room: roomPart.model,
         furnitureId,
         pointerX,
         pointerY,
@@ -120,6 +121,7 @@ export function useDragEventDispatcher({
 
     const request: DragEndRequest = {
       type: 'drag-end',
+      room: roomPart.model,
       furnitureId: activeDragIdRef.current,
     };
 

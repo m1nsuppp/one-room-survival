@@ -1,4 +1,5 @@
 import type { Rotation } from '@/models/furniture.model';
+import type { Room } from '@/models/room.model';
 
 export interface Request {
   readonly type: string;
@@ -6,6 +7,7 @@ export interface Request {
 
 export interface DragStartRequest extends Request {
   readonly type: 'drag-start';
+  readonly room: Room;
   readonly furnitureId: string;
   readonly pointerX: number;
   readonly pointerY: number;
@@ -20,6 +22,7 @@ export interface DragMoveRequest extends Request {
 
 export interface DragEndRequest extends Request {
   readonly type: 'drag-end';
+  readonly room: Room;
   readonly furnitureId: string;
 }
 

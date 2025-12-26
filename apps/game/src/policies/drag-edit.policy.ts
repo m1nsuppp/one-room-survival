@@ -1,7 +1,6 @@
 import type { Command } from '@/commands/command';
 import type { EditPolicy } from './edit-policy';
 import type { ValidationFeedback } from './validation-feedback';
-import type { Room } from '@/models/room.model';
 import type {
   Request,
   DragStartRequest,
@@ -15,7 +14,6 @@ import { snapToGrid } from '@/utils/grid';
 import { isValidationFeedback } from './validation-feedback';
 
 export interface DragEditPolicyContext {
-  getRoom: () => Room;
   updateFurniturePosition: (id: string, x: number, z: number) => void;
   setDragging: (isDragging: boolean) => void;
   executeCommand: (command: Command) => void;
@@ -66,8 +64,7 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
   }
 
   private handleDragStart(request: DragStartRequest): void {
-    const room = this.context.getRoom();
-    const furniture = room.furnitures.find((f) => f.id === request.furnitureId);
+    const furniture = request.room.furnitures.find((f) => f.id === request.furnitureId);
     if (furniture === undefined) {
       return;
     }
@@ -101,12 +98,12 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
     this.context.updateFurniturePosition(this.dragState.furnitureId, newX, newZ);
   }
 
-  private handleDragEnd(_request: DragEndRequest): Command | ValidationFeedback {
+  private handleDragEnd(request: DragEndRequest): Command | ValidationFeedback {
     if (this.dragState === null) {
       return NULL_RESULT;
     }
 
-    const room = this.context.getRoom();
+    const { room } = request;
     const { furnitureId, startX, startZ } = this.dragState;
     const furniture = room.furnitures.find((f) => f.id === furnitureId);
 
