@@ -13,16 +13,14 @@ export function useRoomPart(): RoomPart {
   const dragPolicyRef = useRef<DragEditPolicy | null>(null);
 
   // DragEditPolicy는 드래그 상태를 유지해야 하므로 ref로 관리
-  if (dragPolicyRef.current === null) {
-    dragPolicyRef.current = new DragEditPolicy({
-      getRoom: () => storeApi.getState().room,
-      updateFurniturePosition: actions.updateFurniturePosition,
-      setDragging: actions.setDragging,
-      executeCommand: actions.executeCommand,
-      setValidationFeedback: actions.setValidationFeedback,
-      clearValidationFeedback: actions.clearValidationFeedback,
-    });
-  }
+  dragPolicyRef.current ??= new DragEditPolicy({
+    getRoom: () => storeApi.getState().room,
+    updateFurniturePosition: actions.updateFurniturePosition,
+    setDragging: actions.setDragging,
+    executeCommand: actions.executeCommand,
+    setValidationFeedback: actions.setValidationFeedback,
+    clearValidationFeedback: actions.clearValidationFeedback,
+  });
 
   const dragPolicy = dragPolicyRef.current;
 

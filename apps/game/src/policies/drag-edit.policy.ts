@@ -33,15 +33,16 @@ interface DragState {
 
 type DragRequest = DragStartRequest | DragMoveRequest | DragEndRequest;
 
-// Null command for drag operations that don't produce a command
-const NULL_RESULT = null as unknown as Command;
+// Drag 작업 중 Command를 반환하지 않는 경우의 결과값
+// drag-start, drag-move는 실시간 UI 업데이트만 수행하고 Command를 생성하지 않음
+const NULL_RESULT = null as Command | null;
 
 export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
   private dragState: DragState | null = null;
 
   constructor(private readonly context: DragEditPolicyContext) {}
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- EditPolicy 인터페이스 구현을 위해 인스턴스 메서드로 유지
   understands(request: Request): request is DragRequest {
     return isDragStartRequest(request) || isDragMoveRequest(request) || isDragEndRequest(request);
   }

@@ -71,7 +71,7 @@ export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveComm
     private readonly context: MoveCommandContext,
   ) {}
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- EditPolicy 인터페이스 구현을 위해 인스턴스 메서드로 유지
   understands(request: Request): request is MoveRequest {
     return isMoveRequest(request);
   }
@@ -242,7 +242,7 @@ export class FurnitureRotateEditPolicy implements EditPolicy<RotateRequest, Rota
     private readonly context: RotateCommandContext,
   ) {}
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- EditPolicy 인터페이스 구현을 위해 인스턴스 메서드로 유지
   understands(request: Request): request is RotateRequest {
     return isRotateRequest(request);
   }

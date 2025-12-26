@@ -30,6 +30,7 @@ describe('DragEditPolicy', () => {
 
   const createMockContext = (): DragEditPolicyContext => {
     const room = createTestRoom([createTestFurniture('bed-1', 1, 1)]);
+
     return {
       getRoom: () => room,
       updateFurniturePosition: vi.fn(),
