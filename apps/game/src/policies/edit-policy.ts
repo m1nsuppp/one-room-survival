@@ -1,21 +1,10 @@
 import type { Command } from '@/commands/command';
-import type { Rotation } from '@/models/furniture.model';
+import type { Request } from '@/requests/request';
 import type { ValidationFeedback } from './validation-feedback';
 
-export interface EditPolicy<TRequest, TCommand extends Command> {
+export type { MoveRequest, RotateRequest } from '@/requests/request';
+
+export interface EditPolicy<TRequest extends Request, TCommand extends Command> {
+  understands: (request: Request) => request is TRequest;
   getCommand: (request: TRequest) => TCommand | ValidationFeedback;
-}
-
-export interface MoveRequest {
-  furnitureId: string;
-  fromX: number;
-  fromZ: number;
-  toX: number;
-  toZ: number;
-}
-
-export interface RotateRequest {
-  furnitureId: string;
-  fromRotation: Rotation;
-  toRotation: Rotation;
 }
