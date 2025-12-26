@@ -6,7 +6,6 @@ import type {
   DragStartRequest,
   DragMoveRequest,
   DragEndRequest,
-  MoveRequest,
 } from '@/requests/request';
 import { isDragStartRequest, isDragMoveRequest, isDragEndRequest } from '@/requests/request';
 import { FurnitureMoveEditPolicy } from './furniture-edit.policy';
@@ -21,20 +20,9 @@ export interface DragEditPolicyContext {
   clearValidationFeedback: () => void;
 }
 
-interface DragState {
-  furnitureId: string;
-  startX: number;
-  startZ: number;
-  offsetX: number;
-  offsetZ: number;
-}
-
 type DragRequest = DragStartRequest | DragMoveRequest | DragEndRequest;
 
-
 export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
-  private dragState: DragState | null = null;
-
   constructor(private readonly context: DragEditPolicyContext) {}
 
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- EditPolicy 인터페이스 구현을 위해 인스턴스 메서드로 유지
@@ -44,7 +32,7 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
 
   getCommand(request: DragRequest): Command | ValidationFeedback | null {
     if (isDragStartRequest(request)) {
-      this.handleDragStart(request);
+      this.handleDragStart();
       return null;
     }
 
@@ -60,71 +48,37 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
     return null;
   }
 
-  private handleDragStart(request: DragStartRequest): void {
-    const furniture = request.room.furnitures.find((f) => f.id === request.furnitureId);
-    if (furniture === undefined) {
-      return;
-    }
-
-    this.dragState = {
-      furnitureId: request.furnitureId,
-      startX: furniture.x,
-      startZ: furniture.z,
-      offsetX: 0,
-      offsetZ: 0,
-    };
-
+  private handleDragStart(): void {
     this.context.setDragging(true);
   }
 
-  setOffset(offsetX: number, offsetZ: number): void {
-    if (this.dragState !== null) {
-      this.dragState.offsetX = offsetX;
-      this.dragState.offsetZ = offsetZ;
-    }
-  }
-
   private handleDragMove(request: DragMoveRequest): void {
-    if (this.dragState === null) {
-      return;
-    }
+    const newX = snapToGrid(request.worldX - request.offsetX);
+    const newZ = snapToGrid(request.worldZ - request.offsetZ);
 
-    const newX = snapToGrid(request.worldX - this.dragState.offsetX);
-    const newZ = snapToGrid(request.worldZ - this.dragState.offsetZ);
-
-    this.context.updateFurniturePosition(this.dragState.furnitureId, newX, newZ);
+    this.context.updateFurniturePosition(request.furnitureId, newX, newZ);
   }
 
   private handleDragEnd(request: DragEndRequest): Command | ValidationFeedback | null {
-    if (this.dragState === null) {
-      return null;
-    }
+    const { room, furnitureId, startX, startZ, endX, endZ } = request;
 
-    const { room } = request;
-    const { furnitureId, startX, startZ } = this.dragState;
-    const furniture = room.furnitures.find((f) => f.id === furnitureId);
+    this.context.setDragging(false);
 
-    if (furniture === undefined) {
-      this.cleanup();
-      return null;
-    }
-
-    const endX = furniture.x;
-    const endZ = furniture.z;
-
+    // 위치가 변경되지 않은 경우
     if (endX === startX && endZ === startZ) {
-      this.cleanup();
       return null;
     }
 
+    // 원래 위치로 되돌림 (검증 전)
     this.context.updateFurniturePosition(furnitureId, startX, startZ);
 
-    const movePolicy = new FurnitureMoveEditPolicy(room, {
+    const movePolicy = new FurnitureMoveEditPolicy({
       updateFurniturePosition: this.context.updateFurniturePosition,
     });
 
-    const moveRequest: MoveRequest = {
-      type: 'move',
+    const moveRequest = {
+      type: 'move' as const,
+      room,
       furnitureId,
       fromX: startX,
       fromZ: startZ,
@@ -141,20 +95,6 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
       this.context.executeCommand(result);
     }
 
-    this.cleanup();
     return result;
-  }
-
-  private cleanup(): void {
-    this.dragState = null;
-    this.context.setDragging(false);
-  }
-
-  isDragging(): boolean {
-    return this.dragState !== null;
-  }
-
-  getDragState(): DragState | null {
-    return this.dragState;
   }
 }

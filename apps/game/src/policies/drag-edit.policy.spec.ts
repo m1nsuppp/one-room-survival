@@ -61,6 +61,8 @@ describe('DragEditPolicy', () => {
         furnitureId: 'bed-1',
         worldX: 1.0,
         worldZ: 2.0,
+        offsetX: 0,
+        offsetZ: 0,
       };
 
       expect(policy.understands(request)).toBe(true);
@@ -73,6 +75,10 @@ describe('DragEditPolicy', () => {
         type: 'drag-end',
         room: defaultRoom,
         furnitureId: 'bed-1',
+        startX: 1,
+        startZ: 1,
+        endX: 2,
+        endZ: 2,
       };
 
       expect(policy.understands(request)).toBe(true);
@@ -88,7 +94,7 @@ describe('DragEditPolicy', () => {
   });
 
   describe('handleDragStart', () => {
-    it('should initialize drag state and set dragging to true', () => {
+    it('should set dragging to true', () => {
       const mockContext = createMockContext();
       const policy = new DragEditPolicy(mockContext);
       const request: DragStartRequest = {
@@ -102,95 +108,71 @@ describe('DragEditPolicy', () => {
       policy.getCommand(request);
 
       expect(mockContext.setDragging).toHaveBeenCalledWith(true);
-      expect(policy.isDragging()).toBe(true);
-    });
-
-    it('should not initialize drag state for non-existent furniture', () => {
-      const mockContext = createMockContext();
-      const policy = new DragEditPolicy(mockContext);
-      const request: DragStartRequest = {
-        type: 'drag-start',
-        room: defaultRoom,
-        furnitureId: 'non-existent',
-        pointerX: 0.5,
-        pointerY: 0.5,
-      };
-
-      policy.getCommand(request);
-
-      expect(mockContext.setDragging).not.toHaveBeenCalled();
-      expect(policy.isDragging()).toBe(false);
     });
   });
 
   describe('handleDragMove', () => {
-    it('should update furniture position when dragging', () => {
+    it('should update furniture position with offset applied', () => {
       const mockContext = createMockContext();
       const policy = new DragEditPolicy(mockContext);
-
-      const startRequest: DragStartRequest = {
-        type: 'drag-start',
-        room: defaultRoom,
-        furnitureId: 'bed-1',
-        pointerX: 0.5,
-        pointerY: 0.5,
-      };
-      policy.getCommand(startRequest);
-      policy.setOffset(0, 0);
 
       const moveRequest: DragMoveRequest = {
         type: 'drag-move',
         furnitureId: 'bed-1',
-        worldX: 2.0,
-        worldZ: 2.0,
+        worldX: 2.5,
+        worldZ: 2.5,
+        offsetX: 0.5,
+        offsetZ: 0.5,
       };
       policy.getCommand(moveRequest);
 
+      // worldX - offsetX = 2.5 - 0.5 = 2.0, snapToGrid(2.0) = 2.0
       expect(mockContext.updateFurniturePosition).toHaveBeenCalledWith('bed-1', 2.0, 2.0);
     });
 
-    it('should not update position when not dragging', () => {
+    it('should snap position to grid', () => {
       const mockContext = createMockContext();
       const policy = new DragEditPolicy(mockContext);
 
       const moveRequest: DragMoveRequest = {
         type: 'drag-move',
         furnitureId: 'bed-1',
-        worldX: 2.0,
-        worldZ: 2.0,
+        worldX: 2.35,
+        worldZ: 2.74,
+        offsetX: 0,
+        offsetZ: 0,
       };
       policy.getCommand(moveRequest);
 
-      expect(mockContext.updateFurniturePosition).not.toHaveBeenCalled();
+      // Grid size is 0.1 (10cm), so 2.35 -> 2.4, 2.74 -> 2.7
+      expect(mockContext.updateFurniturePosition).toHaveBeenCalled();
+      const [id, x, z] = (mockContext.updateFurniturePosition as ReturnType<typeof vi.fn>).mock.calls[0] as [string, number, number];
+      expect(id).toBe('bed-1');
+      expect(x).toBeCloseTo(2.4, 5);
+      expect(z).toBeCloseTo(2.7, 5);
     });
   });
 
   describe('handleDragEnd', () => {
-    it('should cleanup drag state when ending drag', () => {
+    it('should set dragging to false', () => {
       const mockContext = createMockContext();
       const policy = new DragEditPolicy(mockContext);
-
-      const startRequest: DragStartRequest = {
-        type: 'drag-start',
-        room: defaultRoom,
-        furnitureId: 'bed-1',
-        pointerX: 0.5,
-        pointerY: 0.5,
-      };
-      policy.getCommand(startRequest);
 
       const endRequest: DragEndRequest = {
         type: 'drag-end',
         room: defaultRoom,
         furnitureId: 'bed-1',
+        startX: 1,
+        startZ: 1,
+        endX: 1,
+        endZ: 1,
       };
       policy.getCommand(endRequest);
 
       expect(mockContext.setDragging).toHaveBeenCalledWith(false);
-      expect(policy.isDragging()).toBe(false);
     });
 
-    it('should not do anything when not dragging', () => {
+    it('should return null when position unchanged', () => {
       const mockContext = createMockContext();
       const policy = new DragEditPolicy(mockContext);
 
@@ -198,39 +180,72 @@ describe('DragEditPolicy', () => {
         type: 'drag-end',
         room: defaultRoom,
         furnitureId: 'bed-1',
+        startX: 1,
+        startZ: 1,
+        endX: 1,
+        endZ: 1,
+      };
+      const result = policy.getCommand(endRequest);
+
+      expect(result).toBeNull();
+    });
+
+    it('should restore original position and validate move when position changed', () => {
+      const mockContext = createMockContext();
+      const policy = new DragEditPolicy(mockContext);
+
+      const endRequest: DragEndRequest = {
+        type: 'drag-end',
+        room: defaultRoom,
+        furnitureId: 'bed-1',
+        startX: 1,
+        startZ: 1,
+        endX: 2,
+        endZ: 2,
       };
       policy.getCommand(endRequest);
 
-      expect(mockContext.setDragging).not.toHaveBeenCalled();
+      // 원래 위치로 되돌림
+      expect(mockContext.updateFurniturePosition).toHaveBeenCalledWith('bed-1', 1, 1);
     });
-  });
 
-  describe('getDragState', () => {
-    it('should return null when not dragging', () => {
+    it('should execute command when move is valid', () => {
       const mockContext = createMockContext();
       const policy = new DragEditPolicy(mockContext);
 
-      expect(policy.getDragState()).toBeNull();
-    });
-
-    it('should return drag state when dragging', () => {
-      const mockContext = createMockContext();
-      const policy = new DragEditPolicy(mockContext);
-      const request: DragStartRequest = {
-        type: 'drag-start',
+      const endRequest: DragEndRequest = {
+        type: 'drag-end',
         room: defaultRoom,
         furnitureId: 'bed-1',
-        pointerX: 0.5,
-        pointerY: 0.5,
+        startX: 1,
+        startZ: 1,
+        endX: 2,
+        endZ: 2,
       };
+      policy.getCommand(endRequest);
 
-      policy.getCommand(request);
+      expect(mockContext.clearValidationFeedback).toHaveBeenCalled();
+      expect(mockContext.executeCommand).toHaveBeenCalled();
+    });
 
-      const state = policy.getDragState();
-      expect(state).not.toBeNull();
-      expect(state?.furnitureId).toBe('bed-1');
-      expect(state?.startX).toBe(1);
-      expect(state?.startZ).toBe(1);
+    it('should set validation feedback when move is invalid', () => {
+      const mockContext = createMockContext();
+      const policy = new DragEditPolicy(mockContext);
+
+      // 방 경계를 벗어나는 이동
+      const endRequest: DragEndRequest = {
+        type: 'drag-end',
+        room: defaultRoom,
+        furnitureId: 'bed-1',
+        startX: 1,
+        startZ: 1,
+        endX: 10, // 방 너비(4)를 초과
+        endZ: 2,
+      };
+      policy.getCommand(endRequest);
+
+      expect(mockContext.setValidationFeedback).toHaveBeenCalled();
+      expect(mockContext.executeCommand).not.toHaveBeenCalled();
     });
   });
 });

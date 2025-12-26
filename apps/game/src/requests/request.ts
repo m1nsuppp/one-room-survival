@@ -18,16 +18,23 @@ export interface DragMoveRequest extends Request {
   readonly furnitureId: string;
   readonly worldX: number;
   readonly worldZ: number;
+  readonly offsetX: number;
+  readonly offsetZ: number;
 }
 
 export interface DragEndRequest extends Request {
   readonly type: 'drag-end';
   readonly room: Room;
   readonly furnitureId: string;
+  readonly startX: number;
+  readonly startZ: number;
+  readonly endX: number;
+  readonly endZ: number;
 }
 
 export interface MoveRequest extends Request {
   readonly type: 'move';
+  readonly room: Room;
   readonly furnitureId: string;
   readonly fromX: number;
   readonly fromZ: number;
@@ -37,6 +44,7 @@ export interface MoveRequest extends Request {
 
 export interface RotateRequest extends Request {
   readonly type: 'rotate';
+  readonly room: Room;
   readonly furnitureId: string;
   readonly fromRotation: Rotation;
   readonly toRotation: Rotation;

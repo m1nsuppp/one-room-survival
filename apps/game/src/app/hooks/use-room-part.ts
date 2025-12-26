@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { useEditorStore } from '@/store/editor-store.context';
 import { RoomPartImpl } from '@/parts/room.part';
 import { FurniturePartImpl } from '@/parts/furniture.part';
@@ -9,18 +9,18 @@ export function useRoomPart(): RoomPart {
   const room = useEditorStore((s) => s.room);
   const actions = useEditorStore((s) => s.actions);
 
-  const dragPolicyRef = useRef<DragEditPolicy | null>(null);
-
-  // DragEditPolicy는 드래그 상태를 유지해야 하므로 ref로 관리
-  dragPolicyRef.current ??= new DragEditPolicy({
-    updateFurniturePosition: actions.updateFurniturePosition,
-    setDragging: actions.setDragging,
-    executeCommand: actions.executeCommand,
-    setValidationFeedback: actions.setValidationFeedback,
-    clearValidationFeedback: actions.clearValidationFeedback,
-  });
-
-  const dragPolicy = dragPolicyRef.current;
+  // DragEditPolicy는 이제 stateless이므로 useMemo로 생성
+  const dragPolicy = useMemo(
+    () =>
+      new DragEditPolicy({
+        updateFurniturePosition: actions.updateFurniturePosition,
+        setDragging: actions.setDragging,
+        executeCommand: actions.executeCommand,
+        setValidationFeedback: actions.setValidationFeedback,
+        clearValidationFeedback: actions.clearValidationFeedback,
+      }),
+    [actions],
+  );
 
   const roomPart = useMemo(() => {
     const part = new RoomPartImpl(room);
@@ -35,19 +35,4 @@ export function useRoomPart(): RoomPart {
   }, [room, dragPolicy]);
 
   return roomPart;
-}
-
-export function useDragPolicy(): DragEditPolicy | null {
-  const actions = useEditorStore((s) => s.actions);
-  const dragPolicyRef = useRef<DragEditPolicy | null>(null);
-
-  dragPolicyRef.current ??= new DragEditPolicy({
-    updateFurniturePosition: actions.updateFurniturePosition,
-    setDragging: actions.setDragging,
-    executeCommand: actions.executeCommand,
-    setValidationFeedback: actions.setValidationFeedback,
-    clearValidationFeedback: actions.clearValidationFeedback,
-  });
-
-  return dragPolicyRef.current;
 }

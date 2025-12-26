@@ -66,10 +66,7 @@ export function checkAABBCollision(a: AABB, b: AABB): boolean {
 }
 
 export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveCommand> {
-  constructor(
-    private readonly room: Room,
-    private readonly context: MoveCommandContext,
-  ) {}
+  constructor(private readonly context: MoveCommandContext) {}
 
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- EditPolicy 인터페이스 구현을 위해 인스턴스 메서드로 유지
   understands(request: Request): request is MoveRequest {
@@ -77,7 +74,8 @@ export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveComm
   }
 
   getCommand(request: MoveRequest): MoveCommand | ValidationFeedback {
-    const furniture = this.room.furnitures.find((f) => f.id === request.furnitureId);
+    const { room } = request;
+    const furniture = room.furnitures.find((f) => f.id === request.furnitureId);
     if (furniture === undefined) {
       return {
         type: 'boundary',
@@ -87,25 +85,25 @@ export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveComm
     }
 
     // 1. 경계 검증
-    const boundaryFeedback = this.validateBoundary(furniture, request.toX, request.toZ);
+    const boundaryFeedback = this.validateBoundary(room, furniture, request.toX, request.toZ);
     if (boundaryFeedback !== null) {
       return boundaryFeedback;
     }
 
     // 2. 충돌 검증
-    const collisionFeedback = this.validateCollision(furniture, request.toX, request.toZ);
+    const collisionFeedback = this.validateCollision(room, furniture, request.toX, request.toZ);
     if (collisionFeedback !== null) {
       return collisionFeedback;
     }
 
     // 3. 동선 검증
-    const pathwayFeedback = this.validatePathwayAccess(furniture, request.toX, request.toZ);
+    const pathwayFeedback = this.validatePathwayAccess(room, furniture, request.toX, request.toZ);
     if (pathwayFeedback !== null) {
       return pathwayFeedback;
     }
 
     // 4. 창문 막힘 검증
-    const windowFeedback = this.validateWindowClearance(furniture, request.toX, request.toZ);
+    const windowFeedback = this.validateWindowClearance(room, furniture, request.toX, request.toZ);
     if (windowFeedback !== null) {
       return windowFeedback;
     }
@@ -124,7 +122,9 @@ export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveComm
   /**
    * 가구가 방 경계를 벗어나는지 검증
    */
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- private 메서드로 분리하여 가독성 유지
   private validateBoundary(
+    room: Room,
     furniture: Furniture,
     toX: number,
     toZ: number,
@@ -133,9 +133,9 @@ export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveComm
 
     if (
       aabb.minX < 0 ||
-      aabb.maxX > this.room.width ||
+      aabb.maxX > room.width ||
       aabb.minZ < 0 ||
-      aabb.maxZ > this.room.depth
+      aabb.maxZ > room.depth
     ) {
       return {
         type: 'boundary',
@@ -150,7 +150,9 @@ export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveComm
   /**
    * 다른 가구와 충돌하는지 검증
    */
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- private 메서드로 분리하여 가독성 유지
   private validateCollision(
+    room: Room,
     furniture: Furniture,
     toX: number,
     toZ: number,
@@ -158,7 +160,7 @@ export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveComm
     const targetAABB = furnitureToAABB(furniture, toX, toZ);
     const collidingIds: string[] = [];
 
-    for (const other of this.room.furnitures) {
+    for (const other of room.furnitures) {
       if (other.id === furniture.id) {
         continue;
       }
@@ -183,17 +185,19 @@ export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveComm
   /**
    * 가구 이동 후 동선이 막히는지 검증
    */
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- private 메서드로 분리하여 가독성 유지
   private validatePathwayAccess(
+    room: Room,
     furniture: Furniture,
     toX: number,
     toZ: number,
   ): PathwayFeedback | null {
     // 이동된 가구로 임시 가구 목록 생성
-    const furnituresAfterMove = this.room.furnitures.map((f) =>
+    const furnituresAfterMove = room.furnitures.map((f) =>
       f.id === furniture.id ? { ...f, x: toX, z: toZ } : f,
     );
 
-    const result = validatePathway(this.room, furnituresAfterMove, furnitureToAABB);
+    const result = validatePathway(room, furnituresAfterMove, furnitureToAABB);
 
     if (!result.isValid) {
       return {
@@ -210,17 +214,19 @@ export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveComm
   /**
    * 가구 이동 후 창문이 막히는지 검증
    */
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- private 메서드로 분리하여 가독성 유지
   private validateWindowClearance(
+    room: Room,
     furniture: Furniture,
     toX: number,
     toZ: number,
   ): WindowBlockageFeedback | null {
     // 이동된 가구로 임시 가구 목록 생성
-    const furnituresAfterMove = this.room.furnitures.map((f) =>
+    const furnituresAfterMove = room.furnitures.map((f) =>
       f.id === furniture.id ? { ...f, x: toX, z: toZ } : f,
     );
 
-    const result = validateWindowClearance(this.room, furnituresAfterMove, furnitureToAABB);
+    const result = validateWindowClearance(room, furnituresAfterMove, furnitureToAABB);
 
     if (!result.isValid && result.blockedWindow !== undefined) {
       return {
@@ -237,10 +243,7 @@ export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveComm
 }
 
 export class FurnitureRotateEditPolicy implements EditPolicy<RotateRequest, RotateCommand> {
-  constructor(
-    private readonly room: Room,
-    private readonly context: RotateCommandContext,
-  ) {}
+  constructor(private readonly context: RotateCommandContext) {}
 
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- EditPolicy 인터페이스 구현을 위해 인스턴스 메서드로 유지
   understands(request: Request): request is RotateRequest {
@@ -248,7 +251,8 @@ export class FurnitureRotateEditPolicy implements EditPolicy<RotateRequest, Rota
   }
 
   getCommand(request: RotateRequest): RotateCommand | ValidationFeedback {
-    const furniture = this.room.furnitures.find((f) => f.id === request.furnitureId);
+    const { room } = request;
+    const furniture = room.furnitures.find((f) => f.id === request.furnitureId);
     if (furniture === undefined) {
       return {
         type: 'boundary',
@@ -264,25 +268,25 @@ export class FurnitureRotateEditPolicy implements EditPolicy<RotateRequest, Rota
     };
 
     // 1. 경계 검증
-    const boundaryFeedback = this.validateBoundary(rotatedFurniture);
+    const boundaryFeedback = this.validateBoundary(room, rotatedFurniture);
     if (boundaryFeedback !== null) {
       return boundaryFeedback;
     }
 
     // 2. 충돌 검증
-    const collisionFeedback = this.validateCollision(rotatedFurniture);
+    const collisionFeedback = this.validateCollision(room, rotatedFurniture);
     if (collisionFeedback !== null) {
       return collisionFeedback;
     }
 
     // 3. 동선 검증
-    const pathwayFeedback = this.validatePathwayAccess(rotatedFurniture);
+    const pathwayFeedback = this.validatePathwayAccess(room, rotatedFurniture);
     if (pathwayFeedback !== null) {
       return pathwayFeedback;
     }
 
     // 4. 창문 막힘 검증
-    const windowFeedback = this.validateWindowClearanceForRotation(rotatedFurniture);
+    const windowFeedback = this.validateWindowClearanceForRotation(room, rotatedFurniture);
     if (windowFeedback !== null) {
       return windowFeedback;
     }
@@ -299,14 +303,15 @@ export class FurnitureRotateEditPolicy implements EditPolicy<RotateRequest, Rota
   /**
    * 가구가 방 경계를 벗어나는지 검증
    */
-  private validateBoundary(furniture: Furniture): BoundaryFeedback | null {
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- private 메서드로 분리하여 가독성 유지
+  private validateBoundary(room: Room, furniture: Furniture): BoundaryFeedback | null {
     const aabb = furnitureToAABB(furniture);
 
     if (
       aabb.minX < 0 ||
-      aabb.maxX > this.room.width ||
+      aabb.maxX > room.width ||
       aabb.minZ < 0 ||
-      aabb.maxZ > this.room.depth
+      aabb.maxZ > room.depth
     ) {
       return {
         type: 'boundary',
@@ -321,11 +326,12 @@ export class FurnitureRotateEditPolicy implements EditPolicy<RotateRequest, Rota
   /**
    * 다른 가구와 충돌하는지 검증
    */
-  private validateCollision(furniture: Furniture): CollisionFeedback | null {
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- private 메서드로 분리하여 가독성 유지
+  private validateCollision(room: Room, furniture: Furniture): CollisionFeedback | null {
     const targetAABB = furnitureToAABB(furniture);
     const collidingIds: string[] = [];
 
-    for (const other of this.room.furnitures) {
+    for (const other of room.furnitures) {
       if (other.id === furniture.id) {
         continue;
       }
@@ -350,13 +356,14 @@ export class FurnitureRotateEditPolicy implements EditPolicy<RotateRequest, Rota
   /**
    * 가구 회전 후 동선이 막히는지 검증
    */
-  private validatePathwayAccess(rotatedFurniture: Furniture): PathwayFeedback | null {
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- private 메서드로 분리하여 가독성 유지
+  private validatePathwayAccess(room: Room, rotatedFurniture: Furniture): PathwayFeedback | null {
     // 회전된 가구로 임시 가구 목록 생성
-    const furnituresAfterRotate = this.room.furnitures.map((f) =>
+    const furnituresAfterRotate = room.furnitures.map((f) =>
       f.id === rotatedFurniture.id ? rotatedFurniture : f,
     );
 
-    const result = validatePathway(this.room, furnituresAfterRotate, furnitureToAABB);
+    const result = validatePathway(room, furnituresAfterRotate, furnitureToAABB);
 
     if (!result.isValid) {
       return {
@@ -373,15 +380,17 @@ export class FurnitureRotateEditPolicy implements EditPolicy<RotateRequest, Rota
   /**
    * 가구 회전 후 창문이 막히는지 검증
    */
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- private 메서드로 분리하여 가독성 유지
   private validateWindowClearanceForRotation(
+    room: Room,
     rotatedFurniture: Furniture,
   ): WindowBlockageFeedback | null {
     // 회전된 가구로 임시 가구 목록 생성
-    const furnituresAfterRotate = this.room.furnitures.map((f) =>
+    const furnituresAfterRotate = room.furnitures.map((f) =>
       f.id === rotatedFurniture.id ? rotatedFurniture : f,
     );
 
-    const result = validateWindowClearance(this.room, furnituresAfterRotate, furnitureToAABB);
+    const result = validateWindowClearance(room, furnituresAfterRotate, furnitureToAABB);
 
     if (!result.isValid && result.blockedWindow !== undefined) {
       return {

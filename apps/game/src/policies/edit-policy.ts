@@ -16,9 +16,10 @@ export interface AnyEditPolicy {
 /**
  * Type-safe interface for implementing policies.
  * Use this when defining a specific policy implementation.
+ *
+ * Implementations should use understands() as a type guard before calling getCommand.
  */
-export interface EditPolicy<TRequest extends Request, TCommand extends Command>
-  extends AnyEditPolicy {
+export interface EditPolicy<TRequest extends Request, TCommand extends Command> {
   understands: (request: Request) => request is TRequest;
   getCommand: (request: TRequest) => TCommand | ValidationFeedback | null;
 }

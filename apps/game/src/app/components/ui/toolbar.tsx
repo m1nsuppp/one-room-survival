@@ -76,11 +76,12 @@ export function Toolbar(): JSX.Element {
     const toRotation = getNextRotation(fromRotation);
 
     // EditPolicy를 통해 검증
-    const policy = new FurnitureRotateEditPolicy(room, {
+    const policy = new FurnitureRotateEditPolicy({
       updateFurnitureRotation,
     });
     const result = policy.getCommand({
       type: 'rotate',
+      room,
       furnitureId: selectedId,
       fromRotation,
       toRotation,

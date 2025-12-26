@@ -53,6 +53,8 @@ describe('Request type guards', () => {
         furnitureId: 'bed-1',
         worldX: 1.0,
         worldZ: 2.0,
+        offsetX: 0,
+        offsetZ: 0,
       };
       expect(isDragMoveRequest(request)).toBe(true);
     });
@@ -69,6 +71,10 @@ describe('Request type guards', () => {
         type: 'drag-end',
         room: mockRoom,
         furnitureId: 'bed-1',
+        startX: 0,
+        startZ: 0,
+        endX: 1,
+        endZ: 1,
       };
       expect(isDragEndRequest(request)).toBe(true);
     });
@@ -83,6 +89,7 @@ describe('Request type guards', () => {
     it('should return true for move request', () => {
       const request: MoveRequest = {
         type: 'move',
+        room: mockRoom,
         furnitureId: 'bed-1',
         fromX: 0,
         fromZ: 0,
@@ -102,6 +109,7 @@ describe('Request type guards', () => {
     it('should return true for rotate request', () => {
       const request: RotateRequest = {
         type: 'rotate',
+        room: mockRoom,
         furnitureId: 'bed-1',
         fromRotation: '0',
         toRotation: '90',

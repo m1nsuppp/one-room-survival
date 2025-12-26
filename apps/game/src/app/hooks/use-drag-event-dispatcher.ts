@@ -3,7 +3,6 @@ import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { RoomPart } from '@/parts/room.part';
 import type { DragStartRequest, DragMoveRequest, DragEndRequest } from '@/requests/request';
-import { DragEditPolicy } from '@/policies/drag-edit.policy';
 
 interface UseDragEventDispatcherProps {
   roomPart: RoomPart;
@@ -13,6 +12,14 @@ interface DragEventDispatcherReturn {
   handleDragStart: (furnitureId: string, pointerX: number, pointerY: number) => void;
 }
 
+interface DragState {
+  furnitureId: string;
+  startX: number;
+  startZ: number;
+  offsetX: number;
+  offsetZ: number;
+}
+
 const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const intersection = new THREE.Vector3();
 
@@ -20,8 +27,7 @@ export function useDragEventDispatcher({
   roomPart,
 }: UseDragEventDispatcherProps): DragEventDispatcherReturn {
   const { camera, raycaster, gl } = useThree();
-  const activeDragIdRef = useRef<string | null>(null);
-  const activePolicyRef = useRef<DragEditPolicy | null>(null);
+  const dragStateRef = useRef<DragState | null>(null);
   const roomPartRef = useRef<RoomPart>(roomPart);
 
   // roomPart가 변경될 때마다 ref 업데이트 (콜백 안정성 유지)
@@ -57,6 +63,15 @@ export function useDragEventDispatcher({
       const offsetX = floorPos.x - furniture.x;
       const offsetZ = floorPos.z - furniture.z;
 
+      // 드래그 상태를 훅에서 관리
+      dragStateRef.current = {
+        furnitureId,
+        startX: furniture.x,
+        startZ: furniture.z,
+        offsetX,
+        offsetZ,
+      };
+
       const request: DragStartRequest = {
         type: 'drag-start',
         room: currentRoomPart.model,
@@ -66,23 +81,14 @@ export function useDragEventDispatcher({
       };
 
       furniturePart.performRequest(request);
-
-      for (const policy of furniturePart.editPolicies) {
-        if (policy instanceof DragEditPolicy) {
-          policy.setOffset(offsetX, offsetZ);
-          activePolicyRef.current = policy;
-          break;
-        }
-      }
-
-      activeDragIdRef.current = furnitureId;
     },
     [getFloorIntersection],
   );
 
   const handlePointerMove = useCallback(
     (e: PointerEvent) => {
-      if (activeDragIdRef.current === null) {
+      const dragState = dragStateRef.current;
+      if (dragState === null) {
         return;
       }
 
@@ -95,16 +101,18 @@ export function useDragEventDispatcher({
         return;
       }
 
-      const furniturePart = roomPartRef.current.getFurniturePartById(activeDragIdRef.current);
+      const furniturePart = roomPartRef.current.getFurniturePartById(dragState.furnitureId);
       if (furniturePart === undefined) {
         return;
       }
 
       const request: DragMoveRequest = {
         type: 'drag-move',
-        furnitureId: activeDragIdRef.current,
+        furnitureId: dragState.furnitureId,
         worldX: floorPos.x,
         worldZ: floorPos.z,
+        offsetX: dragState.offsetX,
+        offsetZ: dragState.offsetZ,
       };
 
       furniturePart.performRequest(request);
@@ -113,28 +121,33 @@ export function useDragEventDispatcher({
   );
 
   const handlePointerUp = useCallback(() => {
-    if (activeDragIdRef.current === null) {
+    const dragState = dragStateRef.current;
+    if (dragState === null) {
       return;
     }
 
     const currentRoomPart = roomPartRef.current;
-    const furniturePart = currentRoomPart.getFurniturePartById(activeDragIdRef.current);
+    const furniturePart = currentRoomPart.getFurniturePartById(dragState.furnitureId);
     if (furniturePart === undefined) {
-      activeDragIdRef.current = null;
-      activePolicyRef.current = null;
+      dragStateRef.current = null;
       return;
     }
+
+    const furniture = furniturePart.model;
 
     const request: DragEndRequest = {
       type: 'drag-end',
       room: currentRoomPart.model,
-      furnitureId: activeDragIdRef.current,
+      furnitureId: dragState.furnitureId,
+      startX: dragState.startX,
+      startZ: dragState.startZ,
+      endX: furniture.x,
+      endZ: furniture.z,
     };
 
     furniturePart.performRequest(request);
 
-    activeDragIdRef.current = null;
-    activePolicyRef.current = null;
+    dragStateRef.current = null;
   }, []);
 
   useEffect(() => {
