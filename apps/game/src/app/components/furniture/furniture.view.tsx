@@ -22,10 +22,7 @@ const SELECTED_EMISSIVE_INTENSITY = 0.3;
 const COLLISION_EMISSIVE = '#ff0000';
 const COLLISION_EMISSIVE_INTENSITY = 0.5;
 
-export function FurnitureView({
-  furniture,
-  onDragStart,
-}: FurnitureViewProps): JSX.Element {
+export function FurnitureView({ furniture, onDragStart }: FurnitureViewProps): JSX.Element {
   const { width, depth, height, x, z, rotation, type, id } = furniture;
   const selectedId = useEditorStore((s) => s.selectedFurnitureId);
   const validationFeedback = useEditorStore((s) => s.validationFeedback);
@@ -37,8 +34,7 @@ export function FurnitureView({
 
   // 충돌 피드백이 있고 이 가구가 충돌 목록에 포함되어 있으면 빨간색 하이라이트
   const isColliding =
-    validationFeedback?.type === 'collision' &&
-    validationFeedback.collidingIds.includes(id);
+    validationFeedback?.type === 'collision' && validationFeedback.collidingIds.includes(id);
 
   const handlePointerDown = (e: ThreeEvent<PointerEvent>): void => {
     e.stopPropagation();

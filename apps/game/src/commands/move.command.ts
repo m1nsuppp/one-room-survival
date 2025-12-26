@@ -35,11 +35,7 @@ export class MoveCommand implements Command {
   }
 
   undo(): void {
-    this.context.updateFurniturePosition(
-      this.furnitureId,
-      this.fromX,
-      this.fromZ
-    );
+    this.context.updateFurniturePosition(this.furnitureId, this.fromX, this.fromZ);
   }
 
   getDescription(): string {

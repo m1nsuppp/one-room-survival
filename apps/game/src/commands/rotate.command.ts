@@ -10,7 +10,7 @@ export class RotateCommand implements Command {
     private readonly furnitureId: string,
     private readonly fromRotation: Rotation,
     private readonly toRotation: Rotation,
-    private readonly context: RotateCommandContext
+    private readonly context: RotateCommandContext,
   ) {}
 
   execute(): void {
