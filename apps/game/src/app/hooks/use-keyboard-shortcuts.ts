@@ -71,6 +71,7 @@ export function useKeyboardShortcuts(): void {
           updateFurnitureRotation,
         });
         const result = policy.getCommand({
+          type: 'rotate',
           furnitureId: selectedFurnitureId,
           fromRotation,
           toRotation,

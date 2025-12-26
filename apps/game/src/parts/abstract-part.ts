@@ -1,12 +1,11 @@
-import type { Command } from '@/commands/command';
 import type { Request } from '@/requests/request';
-import type { EditPolicy } from '@/policies/edit-policy';
+import type { AnyEditPolicy } from '@/policies/edit-policy';
 import type { Part, PolicyResult } from './part';
 
 export abstract class AbstractPart<TModel> implements Part<TModel> {
   private _parent: Part | null = null;
   private readonly _children: Part[] = [];
-  private readonly _editPolicies: Array<EditPolicy<Request, Command>> = [];
+  private readonly _editPolicies: AnyEditPolicy[] = [];
 
   constructor(private readonly _model: TModel) {}
 
@@ -22,15 +21,15 @@ export abstract class AbstractPart<TModel> implements Part<TModel> {
     return this._children;
   }
 
-  get editPolicies(): ReadonlyArray<EditPolicy<Request, Command>> {
+  get editPolicies(): readonly AnyEditPolicy[] {
     return this._editPolicies;
   }
 
-  installEditPolicy(policy: EditPolicy<Request, Command>): void {
+  installEditPolicy(policy: AnyEditPolicy): void {
     this._editPolicies.push(policy);
   }
 
-  uninstallEditPolicy(policy: EditPolicy<Request, Command>): void {
+  uninstallEditPolicy(policy: AnyEditPolicy): void {
     const index = this._editPolicies.indexOf(policy);
     if (index >= 0) {
       this._editPolicies.splice(index, 1);

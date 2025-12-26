@@ -80,6 +80,7 @@ export function Toolbar(): JSX.Element {
       updateFurnitureRotation,
     });
     const result = policy.getCommand({
+      type: 'rotate',
       furnitureId: selectedId,
       fromRotation,
       toRotation,

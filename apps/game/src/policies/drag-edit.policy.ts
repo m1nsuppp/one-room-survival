@@ -31,9 +31,6 @@ interface DragState {
 
 type DragRequest = DragStartRequest | DragMoveRequest | DragEndRequest;
 
-// Drag 작업 중 Command를 반환하지 않는 경우의 결과값
-// drag-start, drag-move는 실시간 UI 업데이트만 수행하고 Command를 생성하지 않음
-const NULL_RESULT = null as Command | null;
 
 export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
   private dragState: DragState | null = null;
@@ -45,22 +42,22 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
     return isDragStartRequest(request) || isDragMoveRequest(request) || isDragEndRequest(request);
   }
 
-  getCommand(request: DragRequest): Command | ValidationFeedback {
+  getCommand(request: DragRequest): Command | ValidationFeedback | null {
     if (isDragStartRequest(request)) {
       this.handleDragStart(request);
-      return NULL_RESULT;
+      return null;
     }
 
     if (isDragMoveRequest(request)) {
       this.handleDragMove(request);
-      return NULL_RESULT;
+      return null;
     }
 
     if (isDragEndRequest(request)) {
       return this.handleDragEnd(request);
     }
 
-    return NULL_RESULT;
+    return null;
   }
 
   private handleDragStart(request: DragStartRequest): void {
@@ -98,9 +95,9 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
     this.context.updateFurniturePosition(this.dragState.furnitureId, newX, newZ);
   }
 
-  private handleDragEnd(request: DragEndRequest): Command | ValidationFeedback {
+  private handleDragEnd(request: DragEndRequest): Command | ValidationFeedback | null {
     if (this.dragState === null) {
-      return NULL_RESULT;
+      return null;
     }
 
     const { room } = request;
@@ -109,7 +106,7 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
 
     if (furniture === undefined) {
       this.cleanup();
-      return NULL_RESULT;
+      return null;
     }
 
     const endX = furniture.x;
@@ -117,7 +114,7 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
 
     if (endX === startX && endZ === startZ) {
       this.cleanup();
-      return NULL_RESULT;
+      return null;
     }
 
     this.context.updateFurniturePosition(furnitureId, startX, startZ);
