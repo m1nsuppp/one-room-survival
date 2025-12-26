@@ -58,9 +58,7 @@ export function useKeyboardShortcuts(): void {
           return;
         }
 
-        const furniture = room.furnitures.find(
-          (f) => f.id === selectedFurnitureId
-        );
+        const furniture = room.furnitures.find((f) => f.id === selectedFurnitureId);
         if (furniture === undefined) {
           return;
         }
@@ -84,7 +82,6 @@ export function useKeyboardShortcuts(): void {
           clearValidationFeedback();
           executeCommand(result);
         }
-        
       }
     };
 

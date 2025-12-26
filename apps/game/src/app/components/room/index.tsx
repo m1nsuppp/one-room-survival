@@ -8,27 +8,25 @@ import { Wall } from './wall.view';
 const VISIBLE_WALL_SIDES = ['north', 'west'];
 
 interface RoomProps {
-  onFurnitureDragStart?: (
-    furnitureId: string,
-    pointerX: number,
-    pointerY: number
-  ) => void;
+  onFurnitureDragStart?: (furnitureId: string, pointerX: number, pointerY: number) => void;
 }
 
 export function Room({ onFurnitureDragStart }: RoomProps): JSX.Element {
   const room = useEditorStore((s) => s.room);
   const { width, depth, height, walls, furnitures } = room;
 
-  const visibleWalls = walls.filter((wall) =>
-    VISIBLE_WALL_SIDES.includes(wall.side)
-  );
+  const visibleWalls = walls.filter((wall) => VISIBLE_WALL_SIDES.includes(wall.side));
 
   return (
     <group>
       <Floor floor={{ width, depth }} />
 
       {visibleWalls.map((wall) => (
-        <Wall key={wall.id} wall={wall} height={height} />
+        <Wall
+          key={wall.id}
+          wall={wall}
+          height={height}
+        />
       ))}
 
       {furnitures.map((furniture) => (

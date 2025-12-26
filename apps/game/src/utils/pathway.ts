@@ -29,14 +29,14 @@ interface HasPathParams {
 export function createOccupancyGrid(
   room: Room,
   furnitures: Furniture[],
-  furnitureToAABB: (furniture: Furniture, x?: number, z?: number) => AABB
+  furnitureToAABB: (furniture: Furniture, x?: number, z?: number) => AABB,
 ): boolean[][] {
   const gridWidth = Math.ceil(room.width / GRID_SIZE);
   const gridDepth = Math.ceil(room.depth / GRID_SIZE);
 
   // 모두 비어있는 상태로 초기화
   const grid: boolean[][] = Array.from({ length: gridDepth }, () =>
-    Array.from({ length: gridWidth }, () => false)
+    Array.from({ length: gridWidth }, () => false),
   );
 
   // 각 가구가 차지하는 그리드 셀을 점유 상태로 변경
@@ -96,10 +96,8 @@ export function getDoorLocations(room: Room): DoorLocation[] {
 
     for (const door of wall.doors) {
       // 문 중심 위치 (0~1 비율을 실제 좌표로 변환)
-      const doorCenterX =
-        wall.start.x + (wall.end.x - wall.start.x) * door.position;
-      const doorCenterZ =
-        wall.start.z + (wall.end.z - wall.start.z) * door.position;
+      const doorCenterX = wall.start.x + (wall.end.x - wall.start.x) * door.position;
+      const doorCenterZ = wall.start.z + (wall.end.z - wall.start.z) * door.position;
 
       // 문 앞 공간 (방 안쪽 방향으로 약간 오프셋)
       const { offsetX, offsetZ } = calculateDoorOffset(wall.side);
@@ -138,7 +136,12 @@ function setVisited(visited: boolean[][], x: number, z: number): void {
   }
 }
 
-function isVisitedOrOccupied(grid: boolean[][], visited: boolean[][], x: number, z: number): boolean {
+function isVisitedOrOccupied(
+  grid: boolean[][],
+  visited: boolean[][],
+  x: number,
+  z: number,
+): boolean {
   const visitedRow = visited[z];
   const gridRow = grid[z];
   if (visitedRow === undefined || gridRow === undefined) {
@@ -161,8 +164,10 @@ export function hasPath(params: HasPathParams): boolean {
   const { gridX: endX, gridZ: endZ } = end;
 
   // 범위 검사
-  if (!isInBounds(startX, startZ, gridWidth, gridDepth) ||
-      !isInBounds(endX, endZ, gridWidth, gridDepth)) {
+  if (
+    !isInBounds(startX, startZ, gridWidth, gridDepth) ||
+    !isInBounds(endX, endZ, gridWidth, gridDepth)
+  ) {
     return false;
   }
 
@@ -178,7 +183,7 @@ export function hasPath(params: HasPathParams): boolean {
 
   // BFS
   const visited: boolean[][] = Array.from({ length: gridDepth }, () =>
-    Array.from({ length: gridWidth }, () => false)
+    Array.from({ length: gridWidth }, () => false),
   );
 
   const queue: GridPosition[] = [{ gridX: startX, gridZ: startZ }];
@@ -231,7 +236,7 @@ export function hasPath(params: HasPathParams): boolean {
 export function validatePathway(
   room: Room,
   furnitures: Furniture[],
-  furnitureToAABB: (furniture: Furniture, x?: number, z?: number) => AABB
+  furnitureToAABB: (furniture: Furniture, x?: number, z?: number) => AABB,
 ): { isValid: boolean; blockedDoorId?: string } {
   const grid = createOccupancyGrid(room, furnitures, furnitureToAABB);
   const doors = getDoorLocations(room);
@@ -283,7 +288,7 @@ export function validatePathway(
 function findNearestUnoccupied(
   grid: boolean[][],
   centerX: number,
-  centerZ: number
+  centerZ: number,
 ): GridPosition | null {
   const gridDepth = grid.length;
   const firstRow = grid[0];

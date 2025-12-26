@@ -1,11 +1,12 @@
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import type { JSX } from 'react';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { Room } from './components/room';
 import { sampleRoom } from '@/data/sample-room.data';
 import { EditorStoreProvider, useEditorStore } from '@/store/editor-store.context';
-import { useFurnitureDrag } from './hooks/use-furniture-drag';
+import { useRoomPart } from './hooks/use-room-part';
+import { useDragEventDispatcher } from './hooks/use-drag-event-dispatcher';
 import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts';
 import { Toolbar } from './components/ui/toolbar';
 import { ValidationFeedbackUI } from './components/ui/validation-feedback';
@@ -19,8 +20,9 @@ function Scene(): JSX.Element {
 
   const orbitControlsRef = useRef<OrbitControlsRef>(null);
   const isDragging = useEditorStore((s) => s.isDragging);
-  const { startDrag, updateDrag, endDrag } = useFurnitureDrag();
-  const { gl } = useThree();
+
+  const roomPart = useRoomPart();
+  const { handleDragStart } = useDragEventDispatcher({ roomPart });
 
   useKeyboardShortcuts();
 
@@ -29,33 +31,6 @@ function Scene(): JSX.Element {
       orbitControlsRef.current.enabled = !isDragging;
     }
   }, [isDragging]);
-
-  const handlePointerMove = useCallback(
-    (e: PointerEvent) => {
-      const rect = gl.domElement.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      updateDrag(x, y);
-    },
-    [gl.domElement, updateDrag],
-  );
-
-  const handlePointerUp = useCallback(() => {
-    endDrag();
-  }, [endDrag]);
-
-  useEffect(() => {
-    const canvas = gl.domElement;
-    canvas.addEventListener('pointermove', handlePointerMove);
-    canvas.addEventListener('pointerup', handlePointerUp);
-    canvas.addEventListener('pointerleave', handlePointerUp);
-
-    return () => {
-      canvas.removeEventListener('pointermove', handlePointerMove);
-      canvas.removeEventListener('pointerup', handlePointerUp);
-      canvas.removeEventListener('pointerleave', handlePointerUp);
-    };
-  }, [gl.domElement, handlePointerMove, handlePointerUp]);
 
   return (
     <>
@@ -71,7 +46,7 @@ function Scene(): JSX.Element {
         intensity={0.3}
       />
 
-      <Room onFurnitureDragStart={startDrag} />
+      <Room onFurnitureDragStart={handleDragStart} />
 
       <OrbitControls
         ref={orbitControlsRef}

@@ -17,16 +17,10 @@ const HALF_DIVISOR = 2;
 /**
  * 창문 앞 클리어런스 영역의 AABB 계산
  */
-function getWindowClearanceAABB(
-  window: Window,
-  wall: Wall,
-  room: Room
-): AABB | null {
+function getWindowClearanceAABB(window: Window, wall: Wall, room: Room): AABB | null {
   // 창문 중심 위치 (벽 기준)
-  const windowCenterX =
-    wall.start.x + (wall.end.x - wall.start.x) * window.position;
-  const windowCenterZ =
-    wall.start.z + (wall.end.z - wall.start.z) * window.position;
+  const windowCenterX = wall.start.x + (wall.end.x - wall.start.x) * window.position;
+  const windowCenterZ = wall.start.z + (wall.end.z - wall.start.z) * window.position;
 
   // 창문 너비의 절반
   const halfWidth = window.width / HALF_DIVISOR;
@@ -72,14 +66,8 @@ function getWindowClearanceAABB(
  * AABB 겹침 영역 계산
  */
 function getAABBOverlapArea(a: AABB, b: AABB): number {
-  const overlapX = Math.max(
-    0,
-    Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX)
-  );
-  const overlapZ = Math.max(
-    0,
-    Math.min(a.maxZ, b.maxZ) - Math.max(a.minZ, b.minZ)
-  );
+  const overlapX = Math.max(0, Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX));
+  const overlapZ = Math.max(0, Math.min(a.maxZ, b.maxZ) - Math.max(a.minZ, b.minZ));
 
   return overlapX * overlapZ;
 }
@@ -152,7 +140,7 @@ function calculateWindowBlockage(params: CalculateWindowBlockageParams): WindowC
 export function validateWindowClearance(
   room: Room,
   furnitures: Furniture[],
-  furnitureToAABB: (furniture: Furniture, x?: number, z?: number) => AABB
+  furnitureToAABB: (furniture: Furniture, x?: number, z?: number) => AABB,
 ): { isValid: boolean; blockedWindow?: WindowClearanceResult } {
   for (const wall of room.walls) {
     if (wall.windows === undefined) {

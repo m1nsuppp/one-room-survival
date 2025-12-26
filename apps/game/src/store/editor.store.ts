@@ -40,9 +40,7 @@ export function createEditorStore(initialRoom: Room): StoreApi<EditorState> {
         set((state) => ({
           room: {
             ...state.room,
-            furnitures: state.room.furnitures.map((f) =>
-              f.id === id ? { ...f, x, z } : f
-            ),
+            furnitures: state.room.furnitures.map((f) => (f.id === id ? { ...f, x, z } : f)),
           },
         })),
 
@@ -50,9 +48,7 @@ export function createEditorStore(initialRoom: Room): StoreApi<EditorState> {
         set((state) => ({
           room: {
             ...state.room,
-            furnitures: state.room.furnitures.map((f) =>
-              f.id === id ? { ...f, rotation } : f
-            ),
+            furnitures: state.room.furnitures.map((f) => (f.id === id ? { ...f, rotation } : f)),
           },
         })),
 
