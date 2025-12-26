@@ -1,6 +1,8 @@
 import type { Room } from '@/models/room.model';
 import type { Furniture, Rotation } from '@/models/furniture.model';
 import type { EditPolicy, MoveRequest, RotateRequest } from './edit-policy';
+import type { Request } from '@/requests/request';
+import { isMoveRequest, isRotateRequest } from '@/requests/request';
 import type {
   ValidationFeedback,
   CollisionFeedback,
@@ -41,8 +43,7 @@ export function furnitureToAABB(furniture: Furniture, x?: number, z?: number): A
   const posZ = z ?? furniture.z;
 
   // 90도, 270도 회전 시 width와 depth가 교환됨
-  const isRotated =
-    furniture.rotation === '90' || furniture.rotation === '270';
+  const isRotated = furniture.rotation === '90' || furniture.rotation === '270';
   const effectiveWidth = isRotated ? furniture.depth : furniture.width;
   const effectiveDepth = isRotated ? furniture.width : furniture.depth;
 
@@ -61,23 +62,22 @@ export function furnitureToAABB(furniture: Furniture, x?: number, z?: number): A
  * 두 AABB가 충돌하는지 검사
  */
 export function checkAABBCollision(a: AABB, b: AABB): boolean {
-  return (
-    a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ
-  );
+  return a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ;
 }
 
-export class FurnitureMoveEditPolicy
-  implements EditPolicy<MoveRequest, MoveCommand>
-{
+export class FurnitureMoveEditPolicy implements EditPolicy<MoveRequest, MoveCommand> {
   constructor(
     private readonly room: Room,
-    private readonly context: MoveCommandContext
+    private readonly context: MoveCommandContext,
   ) {}
 
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  understands(request: Request): request is MoveRequest {
+    return isMoveRequest(request);
+  }
+
   getCommand(request: MoveRequest): MoveCommand | ValidationFeedback {
-    const furniture = this.room.furnitures.find(
-      (f) => f.id === request.furnitureId
-    );
+    const furniture = this.room.furnitures.find((f) => f.id === request.furnitureId);
     if (furniture === undefined) {
       return {
         type: 'boundary',
@@ -87,41 +87,25 @@ export class FurnitureMoveEditPolicy
     }
 
     // 1. 경계 검증
-    const boundaryFeedback = this.validateBoundary(
-      furniture,
-      request.toX,
-      request.toZ
-    );
+    const boundaryFeedback = this.validateBoundary(furniture, request.toX, request.toZ);
     if (boundaryFeedback !== null) {
       return boundaryFeedback;
     }
 
     // 2. 충돌 검증
-    const collisionFeedback = this.validateCollision(
-      furniture,
-      request.toX,
-      request.toZ
-    );
+    const collisionFeedback = this.validateCollision(furniture, request.toX, request.toZ);
     if (collisionFeedback !== null) {
       return collisionFeedback;
     }
 
     // 3. 동선 검증
-    const pathwayFeedback = this.validatePathwayAccess(
-      furniture,
-      request.toX,
-      request.toZ
-    );
+    const pathwayFeedback = this.validatePathwayAccess(furniture, request.toX, request.toZ);
     if (pathwayFeedback !== null) {
       return pathwayFeedback;
     }
 
     // 4. 창문 막힘 검증
-    const windowFeedback = this.validateWindowClearance(
-      furniture,
-      request.toX,
-      request.toZ
-    );
+    const windowFeedback = this.validateWindowClearance(furniture, request.toX, request.toZ);
     if (windowFeedback !== null) {
       return windowFeedback;
     }
@@ -143,7 +127,7 @@ export class FurnitureMoveEditPolicy
   private validateBoundary(
     furniture: Furniture,
     toX: number,
-    toZ: number
+    toZ: number,
   ): BoundaryFeedback | null {
     const aabb = furnitureToAABB(furniture, toX, toZ);
 
@@ -169,7 +153,7 @@ export class FurnitureMoveEditPolicy
   private validateCollision(
     furniture: Furniture,
     toX: number,
-    toZ: number
+    toZ: number,
   ): CollisionFeedback | null {
     const targetAABB = furnitureToAABB(furniture, toX, toZ);
     const collidingIds: string[] = [];
@@ -202,18 +186,14 @@ export class FurnitureMoveEditPolicy
   private validatePathwayAccess(
     furniture: Furniture,
     toX: number,
-    toZ: number
+    toZ: number,
   ): PathwayFeedback | null {
     // 이동된 가구로 임시 가구 목록 생성
     const furnituresAfterMove = this.room.furnitures.map((f) =>
-      f.id === furniture.id ? { ...f, x: toX, z: toZ } : f
+      f.id === furniture.id ? { ...f, x: toX, z: toZ } : f,
     );
 
-    const result = validatePathway(
-      this.room,
-      furnituresAfterMove,
-      furnitureToAABB
-    );
+    const result = validatePathway(this.room, furnituresAfterMove, furnitureToAABB);
 
     if (!result.isValid) {
       return {
@@ -233,18 +213,14 @@ export class FurnitureMoveEditPolicy
   private validateWindowClearance(
     furniture: Furniture,
     toX: number,
-    toZ: number
+    toZ: number,
   ): WindowBlockageFeedback | null {
     // 이동된 가구로 임시 가구 목록 생성
     const furnituresAfterMove = this.room.furnitures.map((f) =>
-      f.id === furniture.id ? { ...f, x: toX, z: toZ } : f
+      f.id === furniture.id ? { ...f, x: toX, z: toZ } : f,
     );
 
-    const result = validateWindowClearance(
-      this.room,
-      furnituresAfterMove,
-      furnitureToAABB
-    );
+    const result = validateWindowClearance(this.room, furnituresAfterMove, furnitureToAABB);
 
     if (!result.isValid && result.blockedWindow !== undefined) {
       return {
@@ -260,18 +236,19 @@ export class FurnitureMoveEditPolicy
   }
 }
 
-export class FurnitureRotateEditPolicy
-  implements EditPolicy<RotateRequest, RotateCommand>
-{
+export class FurnitureRotateEditPolicy implements EditPolicy<RotateRequest, RotateCommand> {
   constructor(
     private readonly room: Room,
-    private readonly context: RotateCommandContext
+    private readonly context: RotateCommandContext,
   ) {}
 
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  understands(request: Request): request is RotateRequest {
+    return isRotateRequest(request);
+  }
+
   getCommand(request: RotateRequest): RotateCommand | ValidationFeedback {
-    const furniture = this.room.furnitures.find(
-      (f) => f.id === request.furnitureId
-    );
+    const furniture = this.room.furnitures.find((f) => f.id === request.furnitureId);
     if (furniture === undefined) {
       return {
         type: 'boundary',
@@ -315,7 +292,7 @@ export class FurnitureRotateEditPolicy
       request.furnitureId,
       request.fromRotation,
       request.toRotation,
-      this.context
+      this.context,
     );
   }
 
@@ -373,19 +350,13 @@ export class FurnitureRotateEditPolicy
   /**
    * 가구 회전 후 동선이 막히는지 검증
    */
-  private validatePathwayAccess(
-    rotatedFurniture: Furniture
-  ): PathwayFeedback | null {
+  private validatePathwayAccess(rotatedFurniture: Furniture): PathwayFeedback | null {
     // 회전된 가구로 임시 가구 목록 생성
     const furnituresAfterRotate = this.room.furnitures.map((f) =>
-      f.id === rotatedFurniture.id ? rotatedFurniture : f
+      f.id === rotatedFurniture.id ? rotatedFurniture : f,
     );
 
-    const result = validatePathway(
-      this.room,
-      furnituresAfterRotate,
-      furnitureToAABB
-    );
+    const result = validatePathway(this.room, furnituresAfterRotate, furnitureToAABB);
 
     if (!result.isValid) {
       return {
@@ -403,18 +374,14 @@ export class FurnitureRotateEditPolicy
    * 가구 회전 후 창문이 막히는지 검증
    */
   private validateWindowClearanceForRotation(
-    rotatedFurniture: Furniture
+    rotatedFurniture: Furniture,
   ): WindowBlockageFeedback | null {
     // 회전된 가구로 임시 가구 목록 생성
     const furnituresAfterRotate = this.room.furnitures.map((f) =>
-      f.id === rotatedFurniture.id ? rotatedFurniture : f
+      f.id === rotatedFurniture.id ? rotatedFurniture : f,
     );
 
-    const result = validateWindowClearance(
-      this.room,
-      furnituresAfterRotate,
-      furnitureToAABB
-    );
+    const result = validateWindowClearance(this.room, furnituresAfterRotate, furnitureToAABB);
 
     if (!result.isValid && result.blockedWindow !== undefined) {
       return {

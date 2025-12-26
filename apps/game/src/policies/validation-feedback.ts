@@ -33,9 +33,7 @@ export type ValidationFeedback =
 
 const FEEDBACK_TYPES: string[] = ['collision', 'boundary', 'pathway', 'windowBlockage'];
 
-export function isValidationFeedback(
-  value: unknown
-): value is ValidationFeedback {
+export function isValidationFeedback(value: unknown): value is ValidationFeedback {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
