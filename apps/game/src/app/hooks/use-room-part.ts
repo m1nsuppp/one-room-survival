@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { useEditorStore } from '@/store/editor-store.context';
+import { useEditorStore, useEditorStoreApi } from '@/store/editor-store.context';
 import { RoomPartImpl } from '@/parts/room.part';
 import { FurniturePartImpl } from '@/parts/furniture.part';
 import { DragEditPolicy } from '@/policies/drag-edit.policy';
@@ -8,22 +8,26 @@ import type { RoomPart } from '@/parts/room.part';
 export function useRoomPart(): RoomPart {
   const room = useEditorStore((s) => s.room);
   const actions = useEditorStore((s) => s.actions);
+  const storeApi = useEditorStoreApi();
 
   const dragPolicyRef = useRef<DragEditPolicy | null>(null);
 
-  const roomPart = useMemo(() => {
-    const part = new RoomPartImpl(room);
-
-    const dragPolicy = new DragEditPolicy({
-      room,
+  // DragEditPolicy는 드래그 상태를 유지해야 하므로 ref로 관리
+  if (dragPolicyRef.current === null) {
+    dragPolicyRef.current = new DragEditPolicy({
+      getRoom: () => storeApi.getState().room,
       updateFurniturePosition: actions.updateFurniturePosition,
       setDragging: actions.setDragging,
       executeCommand: actions.executeCommand,
       setValidationFeedback: actions.setValidationFeedback,
       clearValidationFeedback: actions.clearValidationFeedback,
     });
+  }
 
-    dragPolicyRef.current = dragPolicy;
+  const dragPolicy = dragPolicyRef.current;
+
+  const roomPart = useMemo(() => {
+    const part = new RoomPartImpl(room);
 
     for (const furniture of room.furnitures) {
       const furniturePart = new FurniturePartImpl(furniture);
@@ -32,18 +36,18 @@ export function useRoomPart(): RoomPart {
     }
 
     return part;
-  }, [room, actions]);
+  }, [room, dragPolicy]);
 
   return roomPart;
 }
 
 export function useDragPolicy(): DragEditPolicy | null {
-  const room = useEditorStore((s) => s.room);
   const actions = useEditorStore((s) => s.actions);
+  const storeApi = useEditorStoreApi();
   const dragPolicyRef = useRef<DragEditPolicy | null>(null);
 
   dragPolicyRef.current ??= new DragEditPolicy({
-    room,
+    getRoom: () => storeApi.getState().room,
     updateFurniturePosition: actions.updateFurniturePosition,
     setDragging: actions.setDragging,
     executeCommand: actions.executeCommand,

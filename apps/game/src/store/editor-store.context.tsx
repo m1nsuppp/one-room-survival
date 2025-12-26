@@ -31,3 +31,12 @@ export function useEditorStore<T>(selector: (state: EditorState) => T): T {
 export function useEditorActions(): EditorActions {
   return useEditorStore((s) => s.actions);
 }
+
+export function useEditorStoreApi(): StoreApi<EditorState> {
+  const store = useContext(EditorStoreContext);
+  if (store === null) {
+    throw new Error('useEditorStoreApi must be used within EditorStoreProvider');
+  }
+
+  return store;
+}

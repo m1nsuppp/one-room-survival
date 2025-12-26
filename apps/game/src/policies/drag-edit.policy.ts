@@ -15,7 +15,7 @@ import { snapToGrid } from '@/utils/grid';
 import { isValidationFeedback } from './validation-feedback';
 
 export interface DragEditPolicyContext {
-  room: Room;
+  getRoom: () => Room;
   updateFurniturePosition: (id: string, x: number, z: number) => void;
   setDragging: (isDragging: boolean) => void;
   executeCommand: (command: Command) => void;
@@ -65,7 +65,8 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
   }
 
   private handleDragStart(request: DragStartRequest): void {
-    const furniture = this.context.room.furnitures.find((f) => f.id === request.furnitureId);
+    const room = this.context.getRoom();
+    const furniture = room.furnitures.find((f) => f.id === request.furnitureId);
     if (furniture === undefined) {
       return;
     }
@@ -104,8 +105,9 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
       return NULL_RESULT;
     }
 
+    const room = this.context.getRoom();
     const { furnitureId, startX, startZ } = this.dragState;
-    const furniture = this.context.room.furnitures.find((f) => f.id === furnitureId);
+    const furniture = room.furnitures.find((f) => f.id === furnitureId);
 
     if (furniture === undefined) {
       this.cleanup();
@@ -122,7 +124,7 @@ export class DragEditPolicy implements EditPolicy<DragRequest, Command> {
 
     this.context.updateFurniturePosition(furnitureId, startX, startZ);
 
-    const movePolicy = new FurnitureMoveEditPolicy(this.context.room, {
+    const movePolicy = new FurnitureMoveEditPolicy(room, {
       updateFurniturePosition: this.context.updateFurniturePosition,
     });
 

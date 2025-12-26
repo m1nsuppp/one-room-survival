@@ -28,14 +28,17 @@ describe('DragEditPolicy', () => {
     furnitures,
   });
 
-  const createMockContext = (): DragEditPolicyContext => ({
-    room: createTestRoom([createTestFurniture('bed-1', 1, 1)]),
-    updateFurniturePosition: vi.fn(),
-    setDragging: vi.fn(),
-    executeCommand: vi.fn(),
-    setValidationFeedback: vi.fn(),
-    clearValidationFeedback: vi.fn(),
-  });
+  const createMockContext = (): DragEditPolicyContext => {
+    const room = createTestRoom([createTestFurniture('bed-1', 1, 1)]);
+    return {
+      getRoom: () => room,
+      updateFurniturePosition: vi.fn(),
+      setDragging: vi.fn(),
+      executeCommand: vi.fn(),
+      setValidationFeedback: vi.fn(),
+      clearValidationFeedback: vi.fn(),
+    };
+  };
 
   describe('understands', () => {
     it('should return true for drag-start request', () => {
