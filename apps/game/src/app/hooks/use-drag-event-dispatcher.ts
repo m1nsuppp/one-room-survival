@@ -22,6 +22,10 @@ export function useDragEventDispatcher({
   const { camera, raycaster, gl } = useThree();
   const activeDragIdRef = useRef<string | null>(null);
   const activePolicyRef = useRef<DragEditPolicy | null>(null);
+  const roomPartRef = useRef<RoomPart>(roomPart);
+
+  // roomPart가 변경될 때마다 ref 업데이트 (콜백 안정성 유지)
+  roomPartRef.current = roomPart;
 
   const getFloorIntersection = useCallback(
     (pointerX: number, pointerY: number): THREE.Vector3 | null => {
@@ -38,7 +42,8 @@ export function useDragEventDispatcher({
 
   const handleDragStart = useCallback(
     (furnitureId: string, pointerX: number, pointerY: number) => {
-      const furniturePart = roomPart.getFurniturePartById(furnitureId);
+      const currentRoomPart = roomPartRef.current;
+      const furniturePart = currentRoomPart.getFurniturePartById(furnitureId);
       if (furniturePart === undefined) {
         return;
       }
@@ -54,7 +59,7 @@ export function useDragEventDispatcher({
 
       const request: DragStartRequest = {
         type: 'drag-start',
-        room: roomPart.model,
+        room: currentRoomPart.model,
         furnitureId,
         pointerX,
         pointerY,
@@ -72,7 +77,7 @@ export function useDragEventDispatcher({
 
       activeDragIdRef.current = furnitureId;
     },
-    [roomPart, getFloorIntersection],
+    [getFloorIntersection],
   );
 
   const handlePointerMove = useCallback(
@@ -90,7 +95,7 @@ export function useDragEventDispatcher({
         return;
       }
 
-      const furniturePart = roomPart.getFurniturePartById(activeDragIdRef.current);
+      const furniturePart = roomPartRef.current.getFurniturePartById(activeDragIdRef.current);
       if (furniturePart === undefined) {
         return;
       }
@@ -104,7 +109,7 @@ export function useDragEventDispatcher({
 
       furniturePart.performRequest(request);
     },
-    [roomPart, gl.domElement, getFloorIntersection],
+    [gl.domElement, getFloorIntersection],
   );
 
   const handlePointerUp = useCallback(() => {
@@ -112,7 +117,8 @@ export function useDragEventDispatcher({
       return;
     }
 
-    const furniturePart = roomPart.getFurniturePartById(activeDragIdRef.current);
+    const currentRoomPart = roomPartRef.current;
+    const furniturePart = currentRoomPart.getFurniturePartById(activeDragIdRef.current);
     if (furniturePart === undefined) {
       activeDragIdRef.current = null;
       activePolicyRef.current = null;
@@ -121,7 +127,7 @@ export function useDragEventDispatcher({
 
     const request: DragEndRequest = {
       type: 'drag-end',
-      room: roomPart.model,
+      room: currentRoomPart.model,
       furnitureId: activeDragIdRef.current,
     };
 
@@ -129,7 +135,7 @@ export function useDragEventDispatcher({
 
     activeDragIdRef.current = null;
     activePolicyRef.current = null;
-  }, [roomPart]);
+  }, []);
 
   useEffect(() => {
     const canvas = gl.domElement;
