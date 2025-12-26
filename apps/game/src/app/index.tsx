@@ -1,47 +1,80 @@
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import type { JSX } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Room } from './components/room';
 import { sampleRoom } from '@/data/sample-room.data';
+import { EditorStoreProvider, useEditorStore } from '@/store/editor-store.context';
+import { useFurnitureDrag } from './hooks/use-furniture-drag';
+import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts';
+import { Toolbar } from './components/ui/toolbar';
+import { ValidationFeedbackUI } from './components/ui/validation-feedback';
 
-export default function App(): JSX.Element {
-  // 방 중심점 계산
+type OrbitControlsRef = React.ComponentRef<typeof OrbitControls>;
+
+function Scene(): JSX.Element {
   const roomCenterX = sampleRoom.width / 2;
   const roomCenterZ = sampleRoom.depth / 2;
   const roomCenterY = sampleRoom.height / 3;
 
-  return (
-    <Canvas
-      orthographic
-      camera={{
-        // 코너 뷰: 오른쪽 앞에서 왼쪽 뒤 코너를 바라봄
-        position: [roomCenterX + 8, 6, roomCenterZ + 8],
-        zoom: 90,
-        near: 0.1,
-        far: 100,
-      }}
-      style={{ width: '100vw', height: '100vh', background: '#2a2a3e' }}
-    >
-      {/* 환경광: 부드러운 전체 조명 */}
-      <ambientLight intensity={0.4} />
+  const orbitControlsRef = useRef<OrbitControlsRef>(null);
+  const isDragging = useEditorStore((s) => s.isDragging);
+  const { startDrag, updateDrag, endDrag } = useFurnitureDrag();
+  const { gl } = useThree();
 
-      {/* 메인 조명: 창문 방향에서 들어오는 빛 */}
+  useKeyboardShortcuts();
+
+  useEffect(() => {
+    if (orbitControlsRef.current !== null) {
+      orbitControlsRef.current.enabled = !isDragging;
+    }
+  }, [isDragging]);
+
+  const handlePointerMove = useCallback(
+    (e: PointerEvent) => {
+      const rect = gl.domElement.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      updateDrag(x, y);
+    },
+    [gl.domElement, updateDrag],
+  );
+
+  const handlePointerUp = useCallback(() => {
+    endDrag();
+  }, [endDrag]);
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    canvas.addEventListener('pointermove', handlePointerMove);
+    canvas.addEventListener('pointerup', handlePointerUp);
+    canvas.addEventListener('pointerleave', handlePointerUp);
+
+    return () => {
+      canvas.removeEventListener('pointermove', handlePointerMove);
+      canvas.removeEventListener('pointerup', handlePointerUp);
+      canvas.removeEventListener('pointerleave', handlePointerUp);
+    };
+  }, [gl.domElement, handlePointerMove, handlePointerUp]);
+
+  return (
+    <>
+      <ambientLight intensity={0.4} />
       <directionalLight
         position={[-5, 8, 3]}
         intensity={1.2}
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
-
-      {/* 보조 조명: 반대편에서 부드럽게 */}
       <directionalLight
         position={[5, 3, 5]}
         intensity={0.3}
       />
 
-      <Room room={sampleRoom} />
+      <Room onFurnitureDragStart={startDrag} />
 
       <OrbitControls
+        ref={orbitControlsRef}
         target={[roomCenterX, roomCenterY, roomCenterZ]}
         enableRotate={true}
         enableZoom={true}
@@ -51,6 +84,32 @@ export default function App(): JSX.Element {
         minAzimuthAngle={Math.PI / 6}
         maxAzimuthAngle={Math.PI / 2.5}
       />
-    </Canvas>
+    </>
+  );
+}
+
+export default function App(): JSX.Element {
+  const roomCenterX = sampleRoom.width / 2;
+  const roomCenterZ = sampleRoom.depth / 2;
+
+  return (
+    <EditorStoreProvider initialRoom={sampleRoom}>
+      <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+        <Canvas
+          orthographic
+          camera={{
+            position: [roomCenterX + 8, 6, roomCenterZ + 8],
+            zoom: 90,
+            near: 0.1,
+            far: 100,
+          }}
+          style={{ width: '100%', height: '100%', background: '#2a2a3e' }}
+        >
+          <Scene />
+        </Canvas>
+        <Toolbar />
+        <ValidationFeedbackUI />
+      </div>
+    </EditorStoreProvider>
   );
 }

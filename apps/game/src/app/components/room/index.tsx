@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import type { Room as RoomModel } from '@/models/room.model';
+import { useEditorStore } from '@/store/editor-store.context';
 import { FurnitureView } from '../furniture/furniture.view';
 import { Floor } from './floor.view';
 import { Wall } from './wall.view';
@@ -8,27 +8,35 @@ import { Wall } from './wall.view';
 const VISIBLE_WALL_SIDES = ['north', 'west'];
 
 interface RoomProps {
-  room: RoomModel;
+  onFurnitureDragStart?: (
+    furnitureId: string,
+    pointerX: number,
+    pointerY: number
+  ) => void;
 }
 
-export function Room({ room }: RoomProps): JSX.Element {
+export function Room({ onFurnitureDragStart }: RoomProps): JSX.Element {
+  const room = useEditorStore((s) => s.room);
   const { width, depth, height, walls, furnitures } = room;
 
-  // L자 컷어웨이: 북쪽과 서쪽 벽만 렌더링
-  const visibleWalls = walls.filter((wall) => VISIBLE_WALL_SIDES.includes(wall.side));
+  const visibleWalls = walls.filter((wall) =>
+    VISIBLE_WALL_SIDES.includes(wall.side)
+  );
 
   return (
     <group>
       <Floor floor={{ width, depth }} />
 
-      {/* 뒷벽 (L자형) */}
       {visibleWalls.map((wall) => (
         <Wall key={wall.id} wall={wall} height={height} />
       ))}
 
-      {/* 가구 */}
       {furnitures.map((furniture) => (
-        <FurnitureView key={furniture.id} furniture={furniture} />
+        <FurnitureView
+          key={furniture.id}
+          furniture={furniture}
+          onDragStart={onFurnitureDragStart}
+        />
       ))}
     </group>
   );
